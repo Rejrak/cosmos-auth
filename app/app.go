@@ -2,6 +2,7 @@ package app
 
 import (
 	"io"
+	"os"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
@@ -46,6 +47,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	"alpha/docs"
+	"alpha/x/alpha/interceptor"
 	alphamodulekeeper "alpha/x/alpha/keeper"
 )
 
@@ -189,6 +191,26 @@ func New(
 
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+	var enableAuthBlock bool = false
+
+	if os.Getenv("AUTH_BLOCK") == "1" {
+		enableAuthBlock = true
+	}
+	interceptor.Enabled.Store(enableAuthBlock)
+
+	if enableAuthBlock {
+		coreAnte := app.AnteHandler() // preso da BaseApp; è già la catena standard
+		if coreAnte == nil {
+			panic("core ante handler is nil")
+		}
+		myDec := interceptor.NewAuthAnteDecorator(true)
+
+		// Trasforma il decorator in un sdk.AnteHandler wrappando il core
+		wrapped := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+			return myDec.AnteHandle(ctx, tx, simulate, coreAnte)
+		}
+		app.SetAnteHandler(wrapped) // override: da ora passa SEMPRE nel tuo decorator
+	}
 
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {

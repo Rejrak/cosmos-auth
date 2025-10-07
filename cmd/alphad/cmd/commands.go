@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,6 +26,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"alpha/app"
+	"alpha/x/alpha/interceptor"
 )
 
 func initRootCmd(
@@ -58,6 +60,7 @@ func initRootCmd(
 
 // addModuleInitFlags adds more flags to the start command.
 func addModuleInitFlags(startCmd *cobra.Command) {
+	startCmd.Flags().Bool("auth-block", false, "Enable global tx interceptor (logs every tx)")
 }
 
 func queryCommand() *cobra.Command {
@@ -116,6 +119,17 @@ func newApp(
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
+
+	if v, ok := appOpts.(*viper.Viper); ok {
+		enabled := v.GetBool("auth-block")
+
+		// Fallback per Ignite serve: consenti di attivare via ENV (AUTH_BLOCK=1)
+		if !enabled && os.Getenv("AUTH_BLOCK") == "1" {
+			enabled = true
+		}
+
+		interceptor.Enabled.Store(enabled)
+	}
 
 	return app.New(
 		logger, db, traceStore, true,

@@ -1,0 +1,22 @@
+syntax = "proto3";
+package alpha.alpha.v1;
+
+option go_package = "alpha/x/alpha/types";
+
+message AuthMessage {
+    string address = 1;
+    string operation = 2;
+}
+
+message ResponseMessage {
+    bool success = 1;
+    string message = 2;
+}
+
+message CosmosPacket {
+    string sender_id = 1;
+    oneof msg {
+        AuthMessage authMessage = 2;
+        ResponseMessage responseMessage = 3;
+    }
+}

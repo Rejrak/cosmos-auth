@@ -1,0 +1,39 @@
+version: 1
+
+accounts:
+  - name: alice
+    coins:
+      - 50000token
+      - 100000000stake
+  - name: bob
+    coins:
+      - 5token
+      - 100000stake
+
+faucet:
+  name: bob
+  coins:
+    - 5token
+    - 100000stake
+  port: 4501
+
+genesis:
+  chain_id: alpha-1
+
+validators:
+  - name: alice
+    bonded: 100000000stake
+    app:
+      api:
+        address: 0.0.0.0:1317
+      grpc:
+        address: 0.0.0.0:9090
+      grpc-web:
+        address: 0.0.0.0:9091
+    config:
+      p2p:
+        laddr: "tcp://0.0.0.0:26658"
+      rpc:
+        laddr: "tcp://0.0.0.0:26657"
+        pprof_laddr: "0.0.0.0:6060"
+

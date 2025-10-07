@@ -82,6 +82,9 @@ func NewRootCmd() *cobra.Command {
 		autoCliOpts.Modules[name] = mod
 	}
 
+	rootCmd.PersistentFlags().Bool("auth-block", false, "Enable global ante interceptor (auth-block)")
+	rootCmd.PersistentFlags().String("auth-port", "9095", "Port for the auth-block interceptor to listen on")
+	
 	initRootCmd(rootCmd, clientCtx.TxConfig, moduleBasicManager)
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
