@@ -203,7 +203,7 @@ func New(
 		if coreAnte == nil {
 			panic("core ante handler is nil")
 		}
-		myDec := interceptor.NewAuthAnteDecorator(true)
+		myDec := interceptor.NewAuthAnteDecorator(enableAuthBlock)
 
 		// Trasforma il decorator in un sdk.AnteHandler wrappando il core
 		wrapped := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {

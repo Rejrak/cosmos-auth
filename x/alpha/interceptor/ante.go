@@ -43,8 +43,6 @@ func (d AuthAnteDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	// timeout “ragionevole” per il round-trip col server
-	// (puoi parametrizzarlo via env/flag)
 	const authTimeout = 800 * time.Millisecond
 	for _, m := range tx.GetMsgs() {
 		msgInfo := ExtractMsgInfo(m)
