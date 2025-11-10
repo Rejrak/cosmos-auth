@@ -3,11 +3,11 @@ version: 1
 accounts:
   - name: alice
     coins:
-      - 50000token
+      - 5000000token
       - 100000000stake
   - name: bob
     coins:
-      - 5token
+      - 50000000token
       - 100000stake
 
 faucet:

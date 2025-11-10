@@ -66,7 +66,7 @@ func (d AuthAnteDecorator) AnteHandle(
 
 			ok, serverMsg, err := d.client.RequestAuth(msgInfo.Sender, sdk.MsgTypeURL(m), authTimeout)
 			if err != nil {
-				// Scelta conservativa: blocca su errore/timeout
+				// blocca su errore/timeout
 				// return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
 				// 	"auth service error for %s: %v", msgInfo.Sender, err)
 			}
