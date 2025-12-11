@@ -14,7 +14,7 @@ message ResponseMessage {
 }
 
 message CosmosPacket {
-    string sender_id = 1;
+    string request_id = 1;
     oneof msg {
         AuthMessage authMessage = 2;
         ResponseMessage responseMessage = 3;

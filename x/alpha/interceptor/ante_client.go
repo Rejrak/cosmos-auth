@@ -12,6 +12,7 @@ import (
 	svrTypes "alpha/x/alpha/types"
 
 	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/google/uuid"
 	googleproto "google.golang.org/protobuf/proto"
 )
 
@@ -290,25 +291,25 @@ func (c *Client) readPump(errCh chan<- error) {
 		}
 
 		if resp := pkt.GetResponseMessage(); resp != nil {
-			c.dbg("[client] <- Response sender=%s ok=%v msg=%q",
-				pkt.GetSenderId(), resp.Success, resp.Message)
+			c.dbg("[client] <- Response request_id=%s ok=%v msg=%q",
+				pkt.GetRequestId(), resp.Success, resp.Message)
 
-			sender := pkt.GetSenderId()
+			requestID := pkt.GetRequestId()
 			c.waitersMu.Lock()
-			ch, ok := c.waiters[sender]
+			ch, ok := c.waiters[requestID]
 			c.waitersMu.Unlock()
 			if ok {
 				select {
 				case ch <- resp:
 				default:
-					c.dbg("[client] waiter channel full for %s (dropping)", sender)
+					c.dbg("[client] waiter channel full for %s (dropping)", requestID)
 					c.waitersMu.Lock()
 					close(ch)
-					delete(c.waiters, sender)
+					delete(c.waiters, requestID)
 					c.waitersMu.Unlock()
 				}
 			} else {
-				c.dbg("[client] no waiter for sender=%s (late or unexpected resp)", sender)
+				c.dbg("[client] no waiter for request_id=%s (late or unexpected resp)", requestID)
 			}
 		} else if pkt.GetAuthMessage() != nil {
 			c.dbg("[client] <- AuthMessage (unexpected on client side)")
@@ -322,26 +323,26 @@ func (c *Client) readPump(errCh chan<- error) {
 
 func (c *Client) RequestAuth(sender, operation string, timeout time.Duration) (bool, string, error) {
 	ch := make(chan *svrTypes.ResponseMessage, 1)
-
+	var reqID string = uuid.NewString()
 	c.waitersMu.Lock()
-	if prev, exists := c.waiters[sender]; exists {
+	if prev, exists := c.waiters[reqID]; exists {
 		close(prev)
 	}
-	c.waiters[sender] = ch
+	c.waiters[reqID] = ch
 	c.waitersMu.Unlock()
 	start := time.Now()
 
 	defer func() {
 		c.waitersMu.Lock()
-		if cur, exists := c.waiters[sender]; exists && cur == ch {
-			delete(c.waiters, sender)
+		if cur, exists := c.waiters[reqID]; exists && cur == ch {
+			delete(c.waiters, reqID)
 			close(ch)
 		}
 		c.waitersMu.Unlock()
 	}()
 
 	req := &svrTypes.CosmosPacket{
-		SenderId: sender,
+		RequestId: reqID,
 		Msg: &svrTypes.CosmosPacket_AuthMessage{
 			AuthMessage: &svrTypes.AuthMessage{
 				Address:   sender,
@@ -349,7 +350,7 @@ func (c *Client) RequestAuth(sender, operation string, timeout time.Duration) (b
 			},
 		},
 	}
-	c.dbg("[client] -> Auth sender=%s op=%s", sender, operation)
+	c.dbg("[client] -> Auth sender=%s op=%s request_id=%s", sender, operation, req.RequestId)
 	if err := c.SendProto(req); err != nil {
 		c.dbg("[client] send error: %v", err)
 		return false, "", err
@@ -360,6 +361,7 @@ func (c *Client) RequestAuth(sender, operation string, timeout time.Duration) (b
 
 	select {
 	case resp, ok := <-ch:
+		c.dbg("Response: %v %v", resp, ok)
 		rtt := time.Since(start)
 		if !ok || resp == nil {
 			c.dbg("[client] waiter closed (sender=%s) after %s", sender, rtt)
