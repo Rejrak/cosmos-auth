@@ -2,6 +2,7 @@ package interceptor
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,17 +14,15 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// Abilitabile via flag AUTH_BLOCK Variabile d'ambiente
 type AuthAnteDecorator struct {
 	Enabled bool
 	client  *Client
 }
 
-// New
 func NewAuthAnteDecorator(enabled bool) AuthAnteDecorator {
 	var cl *Client
 	if enabled {
-		cl = NewClient("127.0.0.1:6000")
+		cl = NewClient("0.0.0.0:6000")
 		cl.SetLogger(func(format string, args ...any) {
 			fmt.Printf(format+"\n", args...)
 		})
@@ -32,13 +31,15 @@ func NewAuthAnteDecorator(enabled bool) AuthAnteDecorator {
 	return AuthAnteDecorator{Enabled: enabled, client: cl}
 }
 
-// AnteHandle: intercetta TUTTE le tx (normali + IBC) prima della catena standard.
 func (d AuthAnteDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
+	if ctx.IsCheckTx() || ctx.IsReCheckTx() || simulate {
+		return next(ctx, tx, simulate)
+	}
 	if !d.Enabled {
 		return next(ctx, tx, simulate)
 	}
@@ -63,13 +64,27 @@ func (d AuthAnteDecorator) AnteHandle(
 				"height", ctx.BlockHeight(),
 				"simulate", simulate,
 			)
-
+			sr := time.Now()
 			ok, serverMsg, err := d.client.RequestAuth(msgInfo.Sender, sdk.MsgTypeURL(m), authTimeout)
 			if err != nil {
 				// blocca su errore/timeout
 				// return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
 				// 	"auth service error for %s: %v", msgInfo.Sender, err)
 			}
+			rtt := time.Since(sr)
+			us := rtt.Microseconds()
+			ns := rtt.Nanoseconds()
+			ms := float64(ns) / 1e6
+
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent("external_auth",
+					sdk.NewAttribute("rtt_us", strconv.FormatInt(us, 10)),
+					sdk.NewAttribute("rtt_ns", strconv.FormatInt(ns, 10)),
+					sdk.NewAttribute("rtt_ms", fmt.Sprintf("%.3f", ms)),
+					sdk.NewAttribute("ok", strconv.FormatBool(err == nil && ok)),
+					sdk.NewAttribute("op", sdk.MsgTypeURL(m)),
+				),
+			)
 
 			if !ok {
 				if serverMsg == "" {
@@ -123,7 +138,6 @@ func ExtractMsgInfo(msg sdk.Msg) MsgInfo {
 
 	switch m := msg.(type) {
 
-	// IBC transfer (ICS-20)
 	case *ibctransfertypes.MsgTransfer:
 		mi.Sender = m.Sender
 		mi.Receiver = m.Receiver
@@ -141,9 +155,8 @@ func ExtractMsgInfo(msg sdk.Msg) MsgInfo {
 		mi.Summary = fmt.Sprintf("Authz exec: %d msgs", len(m.Msgs))
 
 	default:
-		// Fallback: serializza in JSON per ispezionare i campi (utile in debug)
 		if pb, ok := msg.(interface{ ProtoReflect() interface{} }); ok {
-			_ = pb // solo per evidenziare che è un proto
+			_ = pb
 		}
 		// bz, _ := protojson.Marshal(msg)
 		mi.Summary = fmt.Sprintf("Unknown msg; json=%v", msg)

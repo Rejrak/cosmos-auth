@@ -5,6 +5,46 @@ accounts:
     coins:
       - 5000000token
       - 100000000stake
+  - name: alice1
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice2
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice3
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice4
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice5
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice6
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice7
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice8
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice9
+    coins:
+      - 5000000token
+      - 100000000stake
+  - name: alice10
+    coins:
+      - 5000000token
+      - 100000000stake
   - name: bob
     coins:
       - 50000000token

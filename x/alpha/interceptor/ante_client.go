@@ -361,12 +361,12 @@ func (c *Client) RequestAuth(sender, operation string, timeout time.Duration) (b
 
 	select {
 	case resp, ok := <-ch:
-		c.dbg("Response: %v %v", resp, ok)
 		rtt := time.Since(start)
 		if !ok || resp == nil {
 			c.dbg("[client] waiter closed (sender=%s) after %s", sender, rtt)
 			return false, "", errors.New("connection closed or waiter canceled")
 		}
+
 		c.dbg("[client] RTT=%s sender=%s ok=%v msg=%q", rtt, sender, resp.Success, resp.Message)
 		return resp.Success, resp.Message, nil
 
