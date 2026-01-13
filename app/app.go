@@ -199,17 +199,16 @@ func New(
 	interceptor.Enabled.Store(enableAuthBlock)
 
 	if enableAuthBlock {
-		coreAnte := app.AnteHandler() // preso da BaseApp; è già la catena standard
+		coreAnte := app.AnteHandler()
 		if coreAnte == nil {
 			panic("core ante handler is nil")
 		}
 		myDec := interceptor.NewAuthAnteDecorator(enableAuthBlock)
 
-		// Trasforma il decorator in un sdk.AnteHandler wrappando il core
 		wrapped := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 			return myDec.AnteHandle(ctx, tx, simulate, coreAnte)
 		}
-		app.SetAnteHandler(wrapped) // override: da ora passa SEMPRE nel tuo decorator
+		app.SetAnteHandler(wrapped)
 	}
 
 	// register legacy modules

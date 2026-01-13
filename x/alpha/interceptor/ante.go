@@ -67,7 +67,7 @@ func (d AuthAnteDecorator) AnteHandle(
 			sr := time.Now()
 			ok, serverMsg, err := d.client.RequestAuth(msgInfo.Sender, sdk.MsgTypeURL(m), authTimeout)
 			if err != nil {
-				// blocca su errore/timeout
+				// block on error/timeout
 				// return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized,
 				// 	"auth service error for %s: %v", msgInfo.Sender, err)
 			}
@@ -150,7 +150,7 @@ func ExtractMsgInfo(msg sdk.Msg) MsgInfo {
 		mi.Receiver = m.ToAddress
 		mi.Summary = fmt.Sprintf("Bank send %s", sdk.NewCoins(m.Amount...).String())
 
-	// Authz esegue messaggi “wrappati”
+	// Authz exec "wrapped" messages
 	case *authztypes.MsgExec:
 		mi.Summary = fmt.Sprintf("Authz exec: %d msgs", len(m.Msgs))
 
