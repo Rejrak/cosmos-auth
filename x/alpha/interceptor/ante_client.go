@@ -151,7 +151,7 @@ func (c *Client) closeConn() {
 	c.connReady = make(chan struct{})
 }
 
-// --------------------- SCRITTURA ---------------------
+// --------------------- W ---------------------
 
 func (c *Client) SendBytes(payload []byte) error {
 	return c.enqueue(frame(payload))
@@ -197,7 +197,7 @@ func (c *Client) writePump() {
 			return
 		case msg := <-c.outq:
 			if err := c.writeWithDeadline(msg); err != nil {
-				// best-effort retry leggero
+				// best-effort light retry
 				select {
 				case <-time.After(50 * time.Millisecond):
 				case <-c.close:
@@ -252,7 +252,7 @@ func frame(payload []byte) []byte {
 	return out
 }
 
-// --------------------- LETTURA/DECODE + DISPATCH ---------------------
+// --------------------- R/DECODE + DISPATCH ---------------------
 
 func (c *Client) readPump(errCh chan<- error) {
 	for {
