@@ -1,0 +1,31 @@
+syntax = "proto3";
+package alpha.authzattrs.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "alpha/x/authzattrs/types";
+
+// BankSendConstraints defines the public typed constraints for a V1 MsgSend.
+message BankSendConstraints {
+  option (gogoproto.equal) = true;
+
+  string denom = 1;
+  string receiver = 2;
+  string max_amount = 3;
+}
+
+// AuthorizationRecord is the current committed authorization for one logical key.
+message AuthorizationRecord {
+  option (gogoproto.equal) = true;
+
+  string authorization_id = 1;
+  string subject = 2;
+  string msg_type_url = 3;
+  string policy_id = 4;
+  uint64 policy_version = 5;
+  uint64 issuer_set_id = 6;
+  int64 valid_from_height = 7;
+  int64 valid_until_height = 8;
+  bool revoked = 9;
+  BankSendConstraints bank_send_constraints = 10 [(gogoproto.nullable) = false];
+}

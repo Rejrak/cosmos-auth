@@ -10,7 +10,8 @@ import (
 
 func TestGenesisInitExport(t *testing.T) {
 	f := initFixture(t)
-	want := types.GenesisState{Params: types.DefaultParams()}
+	want := *types.DefaultGenesis()
+	want.Authorizations = []types.AuthorizationRecord{record()}
 	require.NoError(t, f.keeper.InitGenesis(f.ctx, want))
 	got, err := f.keeper.ExportGenesis(f.ctx)
 	require.NoError(t, err)

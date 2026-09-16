@@ -43,3 +43,38 @@ func TestKeeperInitialization(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, types.DefaultParams(), params)
 }
+
+func TestAuthorizationStorageUsesLogicalKey(t *testing.T) {
+	f := initFixture(t)
+	first := record()
+	require.NoError(t, f.keeper.SetAuthorization(f.ctx, first))
+
+	found, err := f.keeper.HasAuthorization(f.ctx, first.Subject, first.MsgTypeUrl)
+	require.NoError(t, err)
+	require.True(t, found)
+
+	got, found, err := f.keeper.GetAuthorization(f.ctx, first.Subject, first.MsgTypeUrl)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, first, got)
+
+	replacement := first
+	replacement.AuthorizationId = "auth-2"
+	require.NoError(t, f.keeper.SetAuthorization(f.ctx, replacement))
+	got, found, err = f.keeper.GetAuthorization(f.ctx, first.Subject, first.MsgTypeUrl)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, replacement, got)
+
+	revoked := replacement
+	revoked.Revoked = true
+	require.NoError(t, f.keeper.SetAuthorization(f.ctx, revoked))
+	got, found, err = f.keeper.GetAuthorization(f.ctx, first.Subject, first.MsgTypeUrl)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.True(t, got.Revoked)
+
+	_, found, err = f.keeper.GetAuthorization(f.ctx, addrString(3), first.MsgTypeUrl)
+	require.NoError(t, err)
+	require.False(t, found)
+}

@@ -2,7 +2,6 @@ package app
 
 import (
 	"io"
-	"os"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
@@ -47,8 +46,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	"alpha/docs"
-	"alpha/x/alpha/interceptor"
 	alphamodulekeeper "alpha/x/alpha/keeper"
+	authzattrsante "alpha/x/authzattrs/ante"
 	authzattrskeeper "alpha/x/authzattrs/keeper"
 )
 
@@ -194,25 +193,14 @@ func New(
 
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
-	var enableAuthBlock bool = false
-
-	if os.Getenv("AUTH_BLOCK") == "1" {
-		enableAuthBlock = true
+	coreAnte := app.AnteHandler()
+	if coreAnte == nil {
+		panic("core ante handler is nil")
 	}
-	interceptor.Enabled.Store(enableAuthBlock)
-
-	if enableAuthBlock {
-		coreAnte := app.AnteHandler()
-		if coreAnte == nil {
-			panic("core ante handler is nil")
-		}
-		myDec := interceptor.NewAuthAnteDecorator(enableAuthBlock)
-
-		wrapped := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-			return myDec.AnteHandle(ctx, tx, simulate, coreAnte)
-		}
-		app.SetAnteHandler(wrapped)
-	}
+	authzDecorator := authzattrsante.NewAuthzDecorator(app.AuthzAttrsKeeper)
+	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		return authzDecorator.AnteHandle(ctx, tx, simulate, coreAnte)
+	})
 
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {

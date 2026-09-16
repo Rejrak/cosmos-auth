@@ -8,4 +8,7 @@ const (
 	GovModuleName = "gov"
 )
 
-var ParamsKey = collections.NewPrefix("p_authzattrs")
+var (
+	ParamsKey         = collections.NewPrefix("p_authzattrs")
+	AuthorizationsKey = collections.NewPrefix("a_authzattrs")
+)
