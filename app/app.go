@@ -49,6 +49,7 @@ import (
 	"alpha/docs"
 	"alpha/x/alpha/interceptor"
 	alphamodulekeeper "alpha/x/alpha/keeper"
+	authzattrskeeper "alpha/x/authzattrs/keeper"
 )
 
 const (
@@ -100,7 +101,8 @@ type App struct {
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 
-	AlphaKeeper alphamodulekeeper.Keeper
+	AlphaKeeper      alphamodulekeeper.Keeper
+	AuthzAttrsKeeper authzattrskeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -181,6 +183,7 @@ func New(
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
 		&app.AlphaKeeper,
+		&app.AuthzAttrsKeeper,
 	); err != nil {
 		panic(err)
 	}

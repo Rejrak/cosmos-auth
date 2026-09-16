@@ -1,0 +1,13 @@
+syntax = "proto3";
+package alpha.authzattrs.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "alpha/x/authzattrs/types";
+
+// Params defines the parameters for the authzattrs module.
+message Params {
+  option (amino.name) = "alpha/x/authzattrs/Params";
+  option (gogoproto.equal) = true;
+}

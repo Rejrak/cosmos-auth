@@ -1,0 +1,16 @@
+syntax = "proto3";
+package alpha.authzattrs.v1;
+
+import "alpha/authzattrs/v1/params.proto";
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "alpha/x/authzattrs/types";
+
+// GenesisState defines the authzattrs module genesis state.
+message GenesisState {
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

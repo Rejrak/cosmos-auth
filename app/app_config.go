@@ -3,6 +3,8 @@ package app
 import (
 	_ "alpha/x/alpha/module"
 	alphamoduletypes "alpha/x/alpha/types"
+	_ "alpha/x/authzattrs/module"
+	authzattrstypes "alpha/x/authzattrs/types"
 	"time"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -172,6 +174,7 @@ var (
 						ibctransfertypes.ModuleName,
 						icatypes.ModuleName,
 						// chain modules
+						authzattrstypes.ModuleName,
 						alphamoduletypes.ModuleName,
 						// this line is used by starport scaffolding # stargate/app/initGenesis
 					},
@@ -268,6 +271,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   authzattrstypes.ModuleName,
+				Config: appconfig.WrapAny(&authzattrstypes.Module{}),
 			},
 			{
 				Name:   alphamoduletypes.ModuleName,

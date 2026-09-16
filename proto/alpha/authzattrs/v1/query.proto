@@ -1,0 +1,26 @@
+syntax = "proto3";
+package alpha.authzattrs.v1;
+
+import "alpha/authzattrs/v1/params.proto";
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "alpha/x/authzattrs/types";
+
+// Query defines the authzattrs query service.
+service Query {
+  // Params queries the module parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/alpha/authzattrs/v1/params";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
