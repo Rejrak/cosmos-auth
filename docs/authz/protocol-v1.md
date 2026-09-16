@@ -1,11 +1,12 @@
-# Protocol v1.1 — Authorization records and deterministic MsgSend semantics
+# Protocol v1.2 — Authorization records and signed batch semantics
 
 `alpha` is the canonical owner of this contract. The middleware keeps an identical
 copy. Any protocol change requires an ADR, a `CONTRACT_VERSION` bump, and contract
 synchronization from Alpha to middleware.
 
-This revision clarifies the semantics required by M2. It does not introduce the
-signed-batch implementation itself.
+This revision preserves the M2 record and deterministic MsgSend semantics and
+freezes the cryptographic and mutation contract required to implement M3
+independently in Alpha and middleware. It does not implement M3.
 
 ## 1. V1 functional scope
 
@@ -50,8 +51,8 @@ bank_send_constraints {
   - non-empty;
   - used for audit/correlation and later stale-revocation protection;
   - NOT the primary lookup key for normal user transactions;
-  - a new grant replacing the current grant for the same logical key SHOULD use
-    a new `authorization_id`.
+  - a new grant replacing the current grant for the same logical key MUST use
+    a different `authorization_id`.
 
 - `subject`
   - canonical bech32 account address;
@@ -234,9 +235,9 @@ In V1:
 - changing a policy does not automatically invalidate all already-committed
   records unless they are explicitly revoked/replaced or expire.
 
-`AUTHZ_POLICY_MISMATCH` is reserved for update/batch validation paths where two
-policy references are actually being compared. It is not part of the normal M2
-MsgSend decision path.
+`AUTHZ_POLICY_MISMATCH` is not part of the normal M2 MsgSend decision path.
+Batch record/sign-doc metadata mismatch uses the more specific stable code
+`AUTHZ_BATCH_POLICY_MISMATCH`.
 
 ## 8. Middleware record construction
 
@@ -295,57 +296,193 @@ A Keeper-level setter may exist for:
 User-controlled authorization creation begins only after the authenticated batch
 path is implemented.
 
-## 10. Batch V1 baseline for later milestones
+## 10. Cryptography V1
 
-Batch fields:
-
-```text
-domain = "alpha.authzattrs.batch.v1"
-chain_id
-batch_id
-policy_id
-policy_version
-policy_hash
-issuer_set_id
-records[]
-signatures[]
-```
-
-Required types/semantics for the fields already fixed by this revision:
+The only issuer signature algorithm supported by Protocol V1.2 is Ed25519.
 
 ```text
-batch_id: uint64
-policy_version: uint64
-issuer_set_id: uint64
+public key: raw 32 bytes
+signature:  raw 64 bytes
 ```
 
-Within one batch:
-- every record MUST match the batch `policy_id`;
-- every record MUST match the batch `policy_version`;
-- every record MUST match the batch `issuer_set_id`.
+An issuer registry may define a `key_type` enum, but the only valid value for a
+V1.2 authorization batch is `ED25519`. Private keys are never stored on-chain and
+MUST NOT be committed. Any private seed used by golden tests is a clearly marked
+TEST-ONLY, NON-PRODUCTION fixture.
 
-### Canonical ordering
+## 11. AuthorizationBatchSignDoc
 
-Before deterministic protobuf serialization/signing, records are sorted by:
+The logical protobuf schema and field numbers are frozen as:
 
 ```text
-(subject, msg_type_url)
+message AuthorizationBatchSignDoc {
+  string domain = 1;
+  string chain_id = 2;
+  uint64 batch_id = 3;
+  string policy_id = 4;
+  uint64 policy_version = 5;
+  bytes policy_hash = 6;
+  uint64 issuer_set_id = 7;
+  repeated AuthorizationRecord records = 8;
+}
 ```
 
-A batch containing more than one record for the same logical key
-`(subject, msg_type_url)` is rejected with:
+Validation rules:
+
+- `domain` MUST equal exactly `alpha.authzattrs.batch.v1`; otherwise reject with
+  `AUTHZ_BATCH_BAD_DOMAIN`;
+- `chain_id` MUST be non-empty and equal the chain ID of the on-chain context
+  applying the batch; mismatch rejects with `AUTHZ_BATCH_CHAIN_ID_MISMATCH`;
+- `batch_id` MUST be greater than zero;
+- `policy_id` MUST be non-empty;
+- `policy_version` MUST be greater than zero;
+- `policy_hash` MUST be exactly 32 raw bytes containing a SHA-256 digest;
+- `issuer_set_id` MUST be greater than zero;
+- `records` MUST be non-empty.
+
+Malformed structure or invalid scalar/length constraints not assigned a more
+specific reason above reject with `AUTHZ_BATCH_INVALID`.
+
+The trusted off-chain policy layer selects the policy/version and calculates
+`policy_hash` over the representation of the policy it used. The chain does not
+execute, download or recalculate the policy or its hash. It validates the digest
+length and verifies that issuer signatures cover it.
+
+## 12. Canonical records and sign bytes
+
+Before constructing sign bytes, an implementation MUST:
+
+1. validate every AuthorizationRecord using the V1.1 record rules;
+2. reject duplicate logical keys `(subject, msg_type_url)` with
+   `AUTHZ_BATCH_DUPLICATE_RECORD`;
+3. sort records by `(subject, msg_type_url)`, comparing the UTF-8 string bytes in
+   ascending lexicographic order;
+4. construct NEW AuthorizationRecord values by copying only their defined fields
+   (including a newly constructed typed constraints value), then construct a NEW
+   `AuthorizationBatchSignDoc` from the validated sign-doc scalar fields and
+   those validated, sorted records.
+
+Implementations MUST NOT deterministically serialize a protobuf object received
+from the network directly. Unknown protobuf fields MUST NOT enter canonical sign
+bytes; rebuilding the canonical sign doc strips them.
+
+The sign bytes are the deterministic protobuf serialization of that canonical
+`AuthorizationBatchSignDoc`.
 
 ```text
-AUTHZ_BATCH_DUPLICATE_RECORD
+sign_bytes = deterministic_protobuf(canonical_sign_doc)
+batch_hash = SHA256(sign_bytes)
 ```
 
-There is no last-write-wins behavior inside one batch.
+There is no JSON, canonical JSON, Amino encoding, transaction-byte signing or
+ad-hoc string concatenation. The sign doc contains no protobuf maps. Different
+protobuf libraries are acceptable only when they reproduce the shared golden
+bytes exactly.
 
-### Anti-replay baseline
+Ed25519 signs `sign_bytes` DIRECTLY. It does not sign `batch_hash`, JSON, Cosmos
+transaction bytes or Amino bytes. `batch_hash` exists for tests, correlation and
+observability.
 
-`batch_id` is monotonically increasing per `issuer_set_id`.
+## 13. Batch signatures and envelope
 
-The chain stores the highest successfully applied `batch_id` for each issuer set.
+The logical protobuf schemas and field numbers are frozen as:
+
+```text
+message BatchSignature {
+  string issuer_id = 1;
+  bytes signature = 2;
+}
+
+message AuthorizationBatch {
+  AuthorizationBatchSignDoc sign_doc = 1;
+  repeated BatchSignature signatures = 2;
+}
+```
+
+`issuer_id` MUST be non-empty and every signature MUST be exactly 64 raw bytes.
+One issuer counts at most once. A duplicate `issuer_id` rejects the whole batch
+with `AUTHZ_BATCH_DUPLICATE_SIGNATURE`.
+
+Middleware MUST order signatures by `issuer_id` in ascending byte-wise UTF-8
+lexicographic order for canonical output and reproducible tests. The chain MUST
+NOT use signature order when calculating quorum.
+
+Every supplied signature is authoritative input to validate. Any signature that
+is malformed, invalid, unknown, inactive, or out of scope rejects the whole
+batch; it MUST NOT be silently ignored so that the remaining signatures can meet
+quorum.
+
+## 14. Issuer registry
+
+The logical models are frozen as:
+
+```text
+IssuerSet {
+  issuer_set_id: uint64
+  active: bool
+  policy_id: string
+  msg_type_url: string
+  threshold_weight: uint64
+}
+
+Issuer {
+  issuer_set_id: uint64
+  issuer_id: string
+  key_type: ED25519
+  public_key: bytes
+  weight: uint64
+  active: bool
+  valid_from_height: int64
+  valid_until_height: int64
+}
+```
+
+Registry validation requires:
+
+- issuer-set and issuer `issuer_set_id > 0`;
+- non-empty issuer-set `policy_id`;
+- issuer-set `msg_type_url` exactly `/cosmos.bank.v1beta1.MsgSend` in V1;
+- `threshold_weight > 0`;
+- non-empty `issuer_id`;
+- `key_type == ED25519` and a raw 32-byte public key;
+- `weight > 0`;
+- `valid_from_height > 0`;
+- `valid_until_height >= valid_from_height`.
+
+Issuer height validity is inclusive. Registry mutation is authority/governance
+only; a normal user cannot register itself as an issuer. The registry is
+chain-local, so `chain_id` is not duplicated in registry state; the sign doc is
+explicitly chain-bound.
+
+## 15. Issuer scope and weighted quorum
+
+For an issuer to count toward quorum, all of the following MUST hold:
+
+- the issuer belongs to the expected `issuer_set_id`;
+- the IssuerSet is active;
+- the Issuer is active;
+- `valid_from_height <= current_height <= valid_until_height`;
+- IssuerSet `policy_id` equals sign-doc `policy_id`;
+- IssuerSet `msg_type_url` equals `/cosmos.bank.v1beta1.MsgSend`;
+- the Ed25519 signature is valid over canonical `sign_bytes`.
+
+Each unique issuer contributes its weight exactly once. Quorum succeeds only if:
+
+```text
+sum(weight of valid unique issuers) >= threshold_weight
+```
+
+Insufficient weight rejects with `AUTHZ_BATCH_QUORUM_NOT_MET`. Unknown, inactive,
+out-of-scope, duplicate, malformed or cryptographically invalid signatures reject
+with their stable reason code before application.
+
+## 16. Replay protection
+
+The chain stores:
+
+```text
+last_applied_batch_id[issuer_set_id]
+```
 
 A batch is valid only if:
 
@@ -353,33 +490,106 @@ A batch is valid only if:
 batch_id > last_applied_batch_id[issuer_set_id]
 ```
 
-Otherwise reject with:
+Otherwise it is rejected with `AUTHZ_BATCH_REPLAY`. Gaps in batch IDs are allowed.
+`last_applied_batch_id` is updated only after the entire batch succeeds. A failed
+batch does not consume its ID.
+
+## 17. Record/batch consistency
+
+Every record MUST satisfy:
 
 ```text
-AUTHZ_BATCH_REPLAY
+record.policy_id       == sign_doc.policy_id
+record.policy_version  == sign_doc.policy_version
+record.issuer_set_id   == sign_doc.issuer_set_id
+record.msg_type_url    == "/cosmos.bank.v1beta1.MsgSend"
 ```
 
-The exact deterministic protobuf sign-byte schema and signature verification are
-implemented/frozen in M3.
+Any mismatch rejects the batch with `AUTHZ_BATCH_POLICY_MISMATCH`. This reason
+code covers policy ID, policy version, issuer-set metadata and V1 message-scope
+inconsistency between a record and its sign doc.
 
-## 11. Quorum baseline
+## 18. Revocation and stale protection
 
-A signature counts at most once per issuer.
+For an incoming record with `revoked == true`:
 
-An issuer must be:
-- registered;
-- active;
-- valid at current height;
-- a member of the expected `issuer_set_id`;
-- in scope for the policy/message type;
-- cryptographically valid.
+- a CURRENT record MUST exist at the same `(subject, msg_type_url)` logical key;
+- incoming `authorization_id` MUST exactly equal CURRENT `authorization_id`;
+- every incoming field except `revoked` MUST exactly equal the corresponding
+  CURRENT field.
 
-Normal user MsgSend does NOT execute these checks. They belong to batch update
-verification.
+Otherwise reject with `AUTHZ_BATCH_STALE_REVOCATION`. A successful revocation
+persists the record with `revoked=true`; there is no silent delete.
 
-## 12. Golden vectors
+For an incoming new grant with `revoked == false`, replacement of an existing
+CURRENT record requires an `authorization_id` different from the CURRENT
+`authorization_id`. Reusing the current ID is rejected with
+`AUTHZ_BATCH_INVALID`.
 
-Starting with the signed-batch milestone, both repositories must contain identical
-golden-vector inputs and expected deterministic sign bytes/hash.
+## 19. Atomic application order
 
-`authzctl contract check` must fail when shared contract copies diverge.
+The batch MUST be completely validated before any record or replay-state write.
+The conceptual order is:
+
+1. validate envelope structure, domain and chain ID;
+2. validate replay;
+3. validate and canonicalize records;
+4. validate record/batch metadata;
+5. load and validate the IssuerSet;
+6. validate unique issuer signatures;
+7. verify every signature;
+8. calculate weighted quorum;
+9. validate stale revocations and replacements against CURRENT records;
+10. apply all records;
+11. update `last_applied_batch_id`.
+
+If any step fails, zero AuthorizationRecords are modified and replay state is
+unchanged. Implementations may rely on Cosmos transaction atomicity, but MUST
+also deliberately avoid partial application before validation completes.
+
+## 20. Permissionless submitter
+
+The future `MsgBatchUpsertAuthorizations` has a normal `submitter` that signs and
+pays for the Cosmos transaction. The submitter:
+
+- is not included in `AuthorizationBatchSignDoc`;
+- is not an issuer and contributes no quorum weight;
+- does not select or determine policy metadata;
+- may be any Cosmos account permitted to submit a normal transaction.
+
+The submitter is a permissionless broadcaster, not a trusted relayer. Security
+comes from the embedded issuer signatures and on-chain registry/quorum checks.
+
+## 21. Golden-vector contract
+
+M3 implementation MUST add the same golden-vector fixture to Alpha and middleware.
+It MUST contain at least:
+
+- a test `chain_id` and positive `batch_id`;
+- policy ID, version and raw 32-byte policy hash;
+- positive issuer-set ID;
+- at least two AuthorizationRecords intentionally supplied in non-canonical order;
+- the expected canonical record order;
+- expected deterministic protobuf `sign_bytes` as hexadecimal;
+- expected `SHA256(sign_bytes)` as hexadecimal;
+- at least two Ed25519 test signatures and their corresponding public keys.
+
+Any private seeds are TEST-ONLY, NON-PRODUCTION fixtures and MUST be marked as
+such. The vector MUST prove byte-for-byte equality of Alpha and middleware sign
+docs. `authzctl contract check` MUST fail when shared contract copies diverge.
+
+## 22. M3 implementation exclusions
+
+The following remain outside M3:
+
+- ProcessProposal;
+- external CheckTx prefilter;
+- IBC authorization;
+- `authz.MsgExec`;
+- ZK;
+- per-transaction certificates;
+- a complete scheduler;
+- a real Cosmos publisher;
+- Keycloak E2E;
+- production HSM integration;
+- secp256k1 issuer signatures.
