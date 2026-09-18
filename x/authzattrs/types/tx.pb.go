@@ -119,36 +119,133 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+type MsgBatchUpsertAuthorizations struct {
+	Submitter string              `protobuf:"bytes,1,opt,name=submitter,proto3" json:"submitter,omitempty"`
+	Batch     *AuthorizationBatch `protobuf:"bytes,2,opt,name=batch,proto3" json:"batch,omitempty"`
+}
+
+func (m *MsgBatchUpsertAuthorizations) Reset()         { *m = MsgBatchUpsertAuthorizations{} }
+func (m *MsgBatchUpsertAuthorizations) String() string { return proto.CompactTextString(m) }
+func (*MsgBatchUpsertAuthorizations) ProtoMessage()    {}
+func (*MsgBatchUpsertAuthorizations) Descriptor() ([]byte, []int) {
+	return fileDescriptor_05376b2fc370adf7, []int{2}
+}
+func (m *MsgBatchUpsertAuthorizations) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBatchUpsertAuthorizations) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBatchUpsertAuthorizations.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBatchUpsertAuthorizations) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBatchUpsertAuthorizations.Merge(m, src)
+}
+func (m *MsgBatchUpsertAuthorizations) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBatchUpsertAuthorizations) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBatchUpsertAuthorizations.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBatchUpsertAuthorizations proto.InternalMessageInfo
+
+func (m *MsgBatchUpsertAuthorizations) GetSubmitter() string {
+	if m != nil {
+		return m.Submitter
+	}
+	return ""
+}
+
+func (m *MsgBatchUpsertAuthorizations) GetBatch() *AuthorizationBatch {
+	if m != nil {
+		return m.Batch
+	}
+	return nil
+}
+
+type MsgBatchUpsertAuthorizationsResponse struct {
+}
+
+func (m *MsgBatchUpsertAuthorizationsResponse) Reset()         { *m = MsgBatchUpsertAuthorizationsResponse{} }
+func (m *MsgBatchUpsertAuthorizationsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBatchUpsertAuthorizationsResponse) ProtoMessage()    {}
+func (*MsgBatchUpsertAuthorizationsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_05376b2fc370adf7, []int{3}
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBatchUpsertAuthorizationsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBatchUpsertAuthorizationsResponse.Merge(m, src)
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBatchUpsertAuthorizationsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBatchUpsertAuthorizationsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "alpha.authzattrs.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "alpha.authzattrs.v1.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgBatchUpsertAuthorizations)(nil), "alpha.authzattrs.v1.MsgBatchUpsertAuthorizations")
+	proto.RegisterType((*MsgBatchUpsertAuthorizationsResponse)(nil), "alpha.authzattrs.v1.MsgBatchUpsertAuthorizationsResponse")
 }
 
 func init() { proto.RegisterFile("alpha/authzattrs/v1/tx.proto", fileDescriptor_05376b2fc370adf7) }
 
 var fileDescriptor_05376b2fc370adf7 = []byte{
-	// 330 bytes of a gzipped FileDescriptorProto
+	// 447 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x49, 0xcc, 0x29, 0xc8,
 	0x48, 0xd4, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0x4a, 0x2c, 0x29, 0x29, 0x2a, 0xd6, 0x2f, 0x33, 0xd4,
 	0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x06, 0xcb, 0xea, 0x21, 0x64, 0xf5,
-	0xca, 0x0c, 0xa5, 0x14, 0xb0, 0x69, 0x29, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0x86, 0x68, 0x93, 0x12,
+	0xca, 0x0c, 0xa5, 0x14, 0xb0, 0x69, 0x29, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0x86, 0x68, 0x93, 0x52,
+	0xc7, 0xa6, 0x02, 0xc4, 0xcb, 0x2f, 0xca, 0xac, 0x4a, 0x2c, 0xc9, 0xcc, 0xcf, 0x83, 0x2a, 0x14,
 	0x4c, 0xcc, 0xcd, 0xcc, 0xcb, 0xd7, 0x07, 0x93, 0x50, 0x21, 0xf1, 0xe4, 0xfc, 0xe2, 0xdc, 0xfc,
-	0x62, 0xfd, 0xdc, 0xe2, 0x74, 0x90, 0xf2, 0xdc, 0xe2, 0x74, 0xa8, 0x84, 0x24, 0x44, 0x22, 0x1e,
+	0x62, 0xfd, 0xdc, 0xe2, 0x74, 0x90, 0xae, 0xdc, 0xe2, 0x74, 0xa8, 0x84, 0x24, 0x44, 0x22, 0x1e,
 	0xcc, 0xd3, 0x87, 0x70, 0xa0, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x10, 0x71, 0x10, 0x0b, 0x22,
 	0xaa, 0x74, 0x80, 0x91, 0x8b, 0xdf, 0xb7, 0x38, 0x3d, 0xb4, 0x20, 0x25, 0xb1, 0x24, 0x35, 0x00,
-	0x6c, 0xad, 0x90, 0x19, 0x17, 0x27, 0xc8, 0x39, 0xf9, 0x45, 0x99, 0x25, 0x95, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0x9c, 0x4e, 0x12, 0x97, 0xb6, 0xe8, 0x8a, 0x40, 0x8d, 0x73, 0x4c, 0x49, 0x29, 0x4a,
-	0x2d, 0x2e, 0x0e, 0x2e, 0x29, 0xca, 0xcc, 0x4b, 0x0f, 0x42, 0x28, 0x15, 0xb2, 0xe3, 0x62, 0x83,
-	0x38, 0x5c, 0x82, 0x49, 0x81, 0x51, 0x83, 0xdb, 0x48, 0x5a, 0x0f, 0x8b, 0x87, 0xf5, 0x20, 0x96,
-	0x38, 0x71, 0x9e, 0xb8, 0x27, 0xcf, 0xb0, 0xe2, 0xf9, 0x06, 0x2d, 0xc6, 0x20, 0xa8, 0x2e, 0x2b,
-	0xd3, 0xa6, 0xe7, 0x1b, 0xb4, 0x10, 0xe6, 0x75, 0x3d, 0xdf, 0xa0, 0xa5, 0x04, 0x09, 0x9d, 0x0a,
-	0xe4, 0xf0, 0x41, 0x73, 0xae, 0x92, 0x24, 0x97, 0x38, 0x9a, 0x50, 0x50, 0x6a, 0x71, 0x41, 0x7e,
-	0x5e, 0x71, 0xaa, 0x51, 0x01, 0x17, 0xb3, 0x6f, 0x71, 0xba, 0x50, 0x12, 0x17, 0x0f, 0x8a, 0x07,
-	0x55, 0xb0, 0x3a, 0x0c, 0xcd, 0x10, 0x29, 0x1d, 0x62, 0x54, 0xc1, 0xac, 0x92, 0x62, 0x6d, 0x00,
-	0xf9, 0xc5, 0xc9, 0xe8, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63,
-	0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x24, 0xb0,
-	0x78, 0xa5, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0x1c, 0x15, 0xc6, 0x80, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xd9, 0xf7, 0xb8, 0x8a, 0x3e, 0x02, 0x00, 0x00,
+	0xec, 0x3e, 0x21, 0x33, 0x2e, 0x4e, 0xa8, 0x3b, 0x4a, 0x2a, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38,
+	0x9d, 0x24, 0x2e, 0x6d, 0xd1, 0x15, 0x81, 0x1a, 0xe7, 0x98, 0x92, 0x52, 0x94, 0x5a, 0x5c, 0x1c,
+	0x5c, 0x52, 0x94, 0x99, 0x97, 0x1e, 0x84, 0x50, 0x2a, 0x64, 0xc7, 0xc5, 0x06, 0xf1, 0xa1, 0x04,
+	0x93, 0x02, 0xa3, 0x06, 0xb7, 0x91, 0xb4, 0x1e, 0x96, 0x90, 0xd1, 0x83, 0x58, 0xe2, 0xc4, 0x79,
+	0xe2, 0x9e, 0x3c, 0xc3, 0x8a, 0xe7, 0x1b, 0xb4, 0x18, 0x83, 0xa0, 0xba, 0xac, 0x4c, 0x9b, 0x9e,
+	0x6f, 0xd0, 0x42, 0x98, 0xd7, 0xf5, 0x7c, 0x83, 0x96, 0x12, 0x24, 0x90, 0x2a, 0x90, 0x83, 0x09,
+	0xcd, 0xb9, 0x4a, 0x92, 0x5c, 0xe2, 0x68, 0x42, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9,
+	0x4a, 0x37, 0x19, 0xb9, 0x64, 0x7c, 0x8b, 0xd3, 0x9d, 0x12, 0x4b, 0x92, 0x33, 0x42, 0x0b, 0x8a,
+	0x53, 0x8b, 0x4a, 0x1c, 0x91, 0x03, 0x18, 0xec, 0xd5, 0xe2, 0xd2, 0xa4, 0xdc, 0xcc, 0x92, 0x92,
+	0xd4, 0x22, 0xc2, 0x5e, 0x85, 0x2b, 0x15, 0xb2, 0xe5, 0x62, 0x4d, 0x02, 0x19, 0x0a, 0xf5, 0xa9,
+	0x3a, 0x56, 0x9f, 0xa2, 0xd8, 0x05, 0x76, 0x43, 0x10, 0x44, 0x97, 0x95, 0x13, 0xd8, 0xa7, 0x70,
+	0xe3, 0x40, 0x3e, 0xd5, 0xc7, 0xee, 0x53, 0x9c, 0x4e, 0x57, 0x52, 0xe3, 0x52, 0xc1, 0x27, 0x0f,
+	0x0b, 0x03, 0xa3, 0x3f, 0x8c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0x49, 0x5c, 0x3c, 0x28, 0xb1,
+	0xac, 0x82, 0xd5, 0xcd, 0x68, 0x21, 0x29, 0xa5, 0x43, 0x8c, 0x2a, 0x98, 0x5d, 0x42, 0x9d, 0x8c,
+	0x5c, 0x92, 0xb8, 0x03, 0xdb, 0x10, 0x97, 0x59, 0x38, 0xb5, 0x48, 0x59, 0x92, 0xac, 0x05, 0xe6,
+	0x16, 0x29, 0xd6, 0x06, 0x50, 0xe2, 0x72, 0x32, 0x3a, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39,
+	0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63,
+	0x39, 0x86, 0x28, 0x09, 0x2c, 0x21, 0x5e, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0xce, 0x1b,
+	0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xab, 0x22, 0xc3, 0x33, 0xf8, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -164,6 +261,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	BatchUpsertAuthorizations(ctx context.Context, in *MsgBatchUpsertAuthorizations, opts ...grpc.CallOption) (*MsgBatchUpsertAuthorizationsResponse, error)
 }
 
 type msgClient struct {
@@ -183,9 +281,19 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) BatchUpsertAuthorizations(ctx context.Context, in *MsgBatchUpsertAuthorizations, opts ...grpc.CallOption) (*MsgBatchUpsertAuthorizationsResponse, error) {
+	out := new(MsgBatchUpsertAuthorizationsResponse)
+	err := c.cc.Invoke(ctx, "/alpha.authzattrs.v1.Msg/BatchUpsertAuthorizations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	BatchUpsertAuthorizations(context.Context, *MsgBatchUpsertAuthorizations) (*MsgBatchUpsertAuthorizationsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -194,6 +302,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) BatchUpsertAuthorizations(ctx context.Context, req *MsgBatchUpsertAuthorizations) (*MsgBatchUpsertAuthorizationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertAuthorizations not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -218,6 +329,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BatchUpsertAuthorizations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBatchUpsertAuthorizations)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BatchUpsertAuthorizations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/alpha.authzattrs.v1.Msg/BatchUpsertAuthorizations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BatchUpsertAuthorizations(ctx, req.(*MsgBatchUpsertAuthorizations))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "alpha.authzattrs.v1.Msg",
@@ -226,6 +355,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "BatchUpsertAuthorizations",
+			Handler:    _Msg_BatchUpsertAuthorizations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -295,6 +428,71 @@ func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgBatchUpsertAuthorizations) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBatchUpsertAuthorizations) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBatchUpsertAuthorizations) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Batch != nil {
+		{
+			size, err := m.Batch.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Submitter) > 0 {
+		i -= len(m.Submitter)
+		copy(dAtA[i:], m.Submitter)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Submitter)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBatchUpsertAuthorizationsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBatchUpsertAuthorizationsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBatchUpsertAuthorizationsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -322,6 +520,32 @@ func (m *MsgUpdateParams) Size() (n int) {
 }
 
 func (m *MsgUpdateParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgBatchUpsertAuthorizations) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Submitter)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Batch != nil {
+		l = m.Batch.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgBatchUpsertAuthorizationsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -478,6 +702,174 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBatchUpsertAuthorizations) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBatchUpsertAuthorizations: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBatchUpsertAuthorizations: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Submitter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Submitter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Batch", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Batch == nil {
+				m.Batch = &AuthorizationBatch{}
+			}
+			if err := m.Batch.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBatchUpsertAuthorizationsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBatchUpsertAuthorizationsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBatchUpsertAuthorizationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
