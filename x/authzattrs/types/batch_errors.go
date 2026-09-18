@@ -12,4 +12,5 @@ var (
 	ErrBatchDuplicateSignature = errors.New("AUTHZ_BATCH_DUPLICATE_SIGNATURE")
 	ErrBatchUnknownIssuer      = errors.New("AUTHZ_BATCH_UNKNOWN_ISSUER")
 	ErrBatchQuorumNotMet       = errors.New("AUTHZ_BATCH_QUORUM_NOT_MET")
+	ErrBatchReplay             = errors.New("AUTHZ_BATCH_REPLAY")
 )

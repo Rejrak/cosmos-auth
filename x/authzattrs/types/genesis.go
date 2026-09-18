@@ -4,11 +4,12 @@ import "fmt"
 
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:            DefaultParams(),
-		Authorizations:    []AuthorizationRecord{},
-		IssuerSets:        []IssuerSet{},
-		Issuers:           []Issuer{},
-		CurrentIssuerSets: []CurrentIssuerSetSelection{},
+		Params:              DefaultParams(),
+		Authorizations:      []AuthorizationRecord{},
+		IssuerSets:          []IssuerSet{},
+		Issuers:             []Issuer{},
+		CurrentIssuerSets:   []CurrentIssuerSetSelection{},
+		LastAppliedBatchIds: []LastAppliedBatchID{},
 	}
 }
 
@@ -86,6 +87,20 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("current issuer set selection %d policy or message scope mismatch", i)
 		}
 		selectionKeys[key] = struct{}{}
+	}
+
+	replayIssuerSets := make(map[uint64]struct{}, len(gs.LastAppliedBatchIds))
+	for i, replay := range gs.LastAppliedBatchIds {
+		if replay.IssuerSetId == 0 || replay.BatchId == 0 {
+			return fmt.Errorf("last applied batch ID %d: issuer_set_id and batch_id must be positive", i)
+		}
+		if _, exists := replayIssuerSets[replay.IssuerSetId]; exists {
+			return fmt.Errorf("duplicate last applied batch ID for issuer set %d", replay.IssuerSetId)
+		}
+		if _, exists := issuerSets[replay.IssuerSetId]; !exists {
+			return fmt.Errorf("last applied batch ID %d references missing issuer set %d", i, replay.IssuerSetId)
+		}
+		replayIssuerSets[replay.IssuerSetId] = struct{}{}
 	}
 	return nil
 }

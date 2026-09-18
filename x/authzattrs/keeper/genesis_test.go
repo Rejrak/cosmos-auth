@@ -21,6 +21,10 @@ func TestGenesisInitExport(t *testing.T) {
 		{PolicyId: secondSet.PolicyId, MsgTypeUrl: secondSet.MsgTypeUrl, IssuerSetId: secondSet.IssuerSetId},
 		{PolicyId: firstSet.PolicyId, MsgTypeUrl: firstSet.MsgTypeUrl, IssuerSetId: firstSet.IssuerSetId},
 	}
+	input.LastAppliedBatchIds = []types.LastAppliedBatchID{
+		{IssuerSetId: 2, BatchId: 20},
+		{IssuerSetId: 1, BatchId: 10},
+	}
 	require.NoError(t, f.keeper.InitGenesis(f.ctx, input))
 	got, err := f.keeper.ExportGenesis(f.ctx)
 	require.NoError(t, err)
@@ -31,6 +35,10 @@ func TestGenesisInitExport(t *testing.T) {
 	want.CurrentIssuerSets = []types.CurrentIssuerSetSelection{
 		{PolicyId: firstSet.PolicyId, MsgTypeUrl: firstSet.MsgTypeUrl, IssuerSetId: firstSet.IssuerSetId},
 		{PolicyId: secondSet.PolicyId, MsgTypeUrl: secondSet.MsgTypeUrl, IssuerSetId: secondSet.IssuerSetId},
+	}
+	want.LastAppliedBatchIds = []types.LastAppliedBatchID{
+		{IssuerSetId: 1, BatchId: 10},
+		{IssuerSetId: 2, BatchId: 20},
 	}
 	require.Equal(t, &want, got)
 }

@@ -20,6 +20,11 @@ func (k Keeper) InitGenesis(ctx context.Context, genState types.GenesisState) er
 			return err
 		}
 	}
+	for _, replay := range genState.LastAppliedBatchIds {
+		if err := k.SetLastAppliedBatchID(ctx, replay.IssuerSetId, replay.BatchId); err != nil {
+			return err
+		}
+	}
 	for _, issuer := range genState.Issuers {
 		if err := k.SetIssuer(ctx, issuer); err != nil {
 			return err
@@ -44,11 +49,12 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return nil, err
 	}
 	genState := &types.GenesisState{
-		Params:            params,
-		Authorizations:    []types.AuthorizationRecord{},
-		IssuerSets:        []types.IssuerSet{},
-		Issuers:           []types.Issuer{},
-		CurrentIssuerSets: []types.CurrentIssuerSetSelection{},
+		Params:              params,
+		Authorizations:      []types.AuthorizationRecord{},
+		IssuerSets:          []types.IssuerSet{},
+		Issuers:             []types.Issuer{},
+		CurrentIssuerSets:   []types.CurrentIssuerSetSelection{},
+		LastAppliedBatchIds: []types.LastAppliedBatchID{},
 	}
 	if err := k.Authorizations.Walk(ctx, nil, func(_ collections.Pair[string, string], record types.AuthorizationRecord) (bool, error) {
 		genState.Authorizations = append(genState.Authorizations, record)
@@ -71,6 +77,14 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	if err := k.CurrentIssuerSets.Walk(ctx, nil, func(key collections.Pair[string, string], issuerSetID uint64) (bool, error) {
 		genState.CurrentIssuerSets = append(genState.CurrentIssuerSets, types.CurrentIssuerSetSelection{
 			PolicyId: key.K1(), MsgTypeUrl: key.K2(), IssuerSetId: issuerSetID,
+		})
+		return false, nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := k.LastAppliedBatchIDs.Walk(ctx, nil, func(issuerSetID, batchID uint64) (bool, error) {
+		genState.LastAppliedBatchIds = append(genState.LastAppliedBatchIds, types.LastAppliedBatchID{
+			IssuerSetId: issuerSetID, BatchId: batchID,
 		})
 		return false, nil
 	}); err != nil {

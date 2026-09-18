@@ -17,12 +17,13 @@ type Keeper struct {
 	addressCodec address.Codec
 	authority    []byte
 
-	Schema            collections.Schema
-	Params            collections.Item[types.Params]
-	Authorizations    collections.Map[collections.Pair[string, string], types.AuthorizationRecord]
-	IssuerSets        collections.Map[uint64, types.IssuerSet]
-	Issuers           collections.Map[collections.Pair[uint64, string], types.Issuer]
-	CurrentIssuerSets collections.Map[collections.Pair[string, string], uint64]
+	Schema              collections.Schema
+	Params              collections.Item[types.Params]
+	Authorizations      collections.Map[collections.Pair[string, string], types.AuthorizationRecord]
+	IssuerSets          collections.Map[uint64, types.IssuerSet]
+	Issuers             collections.Map[collections.Pair[uint64, string], types.Issuer]
+	CurrentIssuerSets   collections.Map[collections.Pair[string, string], uint64]
+	LastAppliedBatchIDs collections.Map[uint64, uint64]
 }
 
 func NewKeeper(storeService corestore.KVStoreService, cdc codec.Codec, addressCodec address.Codec, authority []byte) Keeper {
@@ -61,6 +62,13 @@ func NewKeeper(storeService corestore.KVStoreService, cdc codec.Codec, addressCo
 			types.CurrentIssuerSetsKey,
 			"current_issuer_sets",
 			collections.PairKeyCodec(collections.StringKey, collections.StringKey),
+			collections.Uint64Value,
+		),
+		LastAppliedBatchIDs: collections.NewMap(
+			sb,
+			types.LastAppliedBatchIDsKey,
+			"last_applied_batch_ids",
+			collections.Uint64Key,
 			collections.Uint64Value,
 		),
 	}
@@ -158,4 +166,37 @@ func (k Keeper) GetCurrentIssuerSet(ctx context.Context, policyID, msgTypeURL st
 		return 0, false, nil
 	}
 	return issuerSetID, err == nil, err
+}
+
+func (k Keeper) GetLastAppliedBatchID(ctx context.Context, issuerSetID uint64) (uint64, bool, error) {
+	if issuerSetID == 0 {
+		return 0, false, types.ErrInvalidBatchSignDoc
+	}
+	batchID, err := k.LastAppliedBatchIDs.Get(ctx, issuerSetID)
+	if errors.Is(err, collections.ErrNotFound) {
+		return 0, false, nil
+	}
+	return batchID, err == nil, err
+}
+
+func (k Keeper) SetLastAppliedBatchID(ctx context.Context, issuerSetID, batchID uint64) error {
+	if issuerSetID == 0 || batchID == 0 {
+		return types.ErrInvalidBatchSignDoc
+	}
+	return k.LastAppliedBatchIDs.Set(ctx, issuerSetID, batchID)
+}
+
+// ValidateBatchReplay checks monotonicity without consuming the batch ID.
+func (k Keeper) ValidateBatchReplay(ctx context.Context, issuerSetID, batchID uint64) error {
+	if issuerSetID == 0 || batchID == 0 {
+		return types.ErrInvalidBatchSignDoc
+	}
+	lastApplied, found, err := k.GetLastAppliedBatchID(ctx, issuerSetID)
+	if err != nil {
+		return err
+	}
+	if found && batchID <= lastApplied {
+		return types.ErrBatchReplay
+	}
+	return nil
 }

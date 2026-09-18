@@ -15,9 +15,11 @@ func TestGenesisState(t *testing.T) {
 	require.NotNil(t, genesis.IssuerSets)
 	require.NotNil(t, genesis.Issuers)
 	require.NotNil(t, genesis.CurrentIssuerSets)
+	require.NotNil(t, genesis.LastAppliedBatchIds)
 	require.Empty(t, genesis.IssuerSets)
 	require.Empty(t, genesis.Issuers)
 	require.Empty(t, genesis.CurrentIssuerSets)
+	require.Empty(t, genesis.LastAppliedBatchIds)
 	require.NoError(t, genesis.Validate())
 }
 
@@ -47,6 +49,18 @@ func TestGenesisRegistryValidation(t *testing.T) {
 		"current selection message mismatch": func(genesis *types.GenesisState) {
 			genesis.CurrentIssuerSets[0].MsgTypeUrl = "/unsupported"
 		},
+		"duplicate replay entry": func(genesis *types.GenesisState) {
+			genesis.LastAppliedBatchIds = append(genesis.LastAppliedBatchIds, genesis.LastAppliedBatchIds[0])
+		},
+		"replay entry missing set": func(genesis *types.GenesisState) {
+			genesis.LastAppliedBatchIds[0].IssuerSetId = 99
+		},
+		"replay entry zero issuer set": func(genesis *types.GenesisState) {
+			genesis.LastAppliedBatchIds[0].IssuerSetId = 0
+		},
+		"replay entry zero batch": func(genesis *types.GenesisState) {
+			genesis.LastAppliedBatchIds[0].BatchId = 0
+		},
 	}
 	for name, mutate := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -74,6 +88,7 @@ func validRegistryGenesis() types.GenesisState {
 		CurrentIssuerSets: []types.CurrentIssuerSetSelection{{
 			PolicyId: issuerSet.PolicyId, MsgTypeUrl: issuerSet.MsgTypeUrl, IssuerSetId: issuerSet.IssuerSetId,
 		}},
+		LastAppliedBatchIds: []types.LastAppliedBatchID{{IssuerSetId: issuerSet.IssuerSetId, BatchId: 10}},
 	}
 }
 

@@ -15,6 +15,12 @@ message CurrentIssuerSetSelection {
   uint64 issuer_set_id = 3;
 }
 
+// LastAppliedBatchID stores replay state for one issuer set.
+message LastAppliedBatchID {
+  uint64 issuer_set_id = 1;
+  uint64 batch_id = 2;
+}
+
 // GenesisState defines the authzattrs module genesis state.
 message GenesisState {
   Params params = 1 [
@@ -25,4 +31,5 @@ message GenesisState {
   repeated IssuerSet issuer_sets = 3 [(gogoproto.nullable) = false];
   repeated Issuer issuers = 4 [(gogoproto.nullable) = false];
   repeated CurrentIssuerSetSelection current_issuer_sets = 5 [(gogoproto.nullable) = false];
+  repeated LastAppliedBatchID last_applied_batch_ids = 6 [(gogoproto.nullable) = false];
 }
