@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"testing"
 
 	"cosmossdk.io/core/address"
@@ -77,4 +78,114 @@ func TestAuthorizationStorageUsesLogicalKey(t *testing.T) {
 	_, found, err = f.keeper.GetAuthorization(f.ctx, addrString(3), first.MsgTypeUrl)
 	require.NoError(t, err)
 	require.False(t, found)
+}
+
+func TestIssuerSetStorageAndValidation(t *testing.T) {
+	f := initFixture(t)
+	valid := validIssuerSet()
+	valid.Active = false
+	require.NoError(t, f.keeper.SetIssuerSet(f.ctx, valid))
+
+	got, found, err := f.keeper.GetIssuerSet(f.ctx, valid.IssuerSetId)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, valid, got)
+
+	invalid := []types.IssuerSet{
+		{PolicyId: valid.PolicyId, MsgTypeUrl: valid.MsgTypeUrl, ThresholdWeight: 1},
+		{IssuerSetId: 1, MsgTypeUrl: valid.MsgTypeUrl, ThresholdWeight: 1},
+		{IssuerSetId: 1, PolicyId: valid.PolicyId, MsgTypeUrl: "/unsupported", ThresholdWeight: 1},
+		{IssuerSetId: 1, PolicyId: valid.PolicyId, MsgTypeUrl: valid.MsgTypeUrl},
+	}
+	for _, issuerSet := range invalid {
+		require.Error(t, f.keeper.SetIssuerSet(f.ctx, issuerSet))
+	}
+}
+
+func TestIssuerStorageAndValidation(t *testing.T) {
+	f := initFixture(t)
+	valid := validIssuer()
+	valid.Active = false
+	require.NoError(t, f.keeper.SetIssuer(f.ctx, valid))
+
+	got, found, err := f.keeper.GetIssuer(f.ctx, valid.IssuerSetId, valid.IssuerId)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, valid, got)
+
+	invalidKey := valid
+	invalidKey.PublicKey = make([]byte, ed25519.PublicKeySize-1)
+	require.Error(t, f.keeper.SetIssuer(f.ctx, invalidKey))
+
+	invalidType := valid
+	invalidType.KeyType = types.IssuerKeyType_ISSUER_KEY_TYPE_UNSPECIFIED
+	require.Error(t, f.keeper.SetIssuer(f.ctx, invalidType))
+}
+
+func TestIssuerIdentityIsScopedByIssuerSet(t *testing.T) {
+	f := initFixture(t)
+	first := validIssuer()
+	require.NoError(t, f.keeper.SetIssuer(f.ctx, first))
+
+	replacement := first
+	replacement.Weight = 2
+	require.NoError(t, f.keeper.SetIssuer(f.ctx, replacement))
+
+	secondSet := first
+	secondSet.IssuerSetId = 2
+	secondSet.Weight = 3
+	require.NoError(t, f.keeper.SetIssuer(f.ctx, secondSet))
+
+	gotFirst, found, err := f.keeper.GetIssuer(f.ctx, first.IssuerSetId, first.IssuerId)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, replacement, gotFirst)
+
+	gotSecond, found, err := f.keeper.GetIssuer(f.ctx, secondSet.IssuerSetId, secondSet.IssuerId)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, secondSet, gotSecond)
+}
+
+func TestCurrentIssuerSetStorageAndValidation(t *testing.T) {
+	f := initFixture(t)
+	active := validIssuerSet()
+	require.NoError(t, f.keeper.SetIssuerSet(f.ctx, active))
+	require.NoError(t, f.keeper.SetCurrentIssuerSet(f.ctx, active.PolicyId, active.MsgTypeUrl, active.IssuerSetId))
+
+	got, found, err := f.keeper.GetCurrentIssuerSet(f.ctx, active.PolicyId, active.MsgTypeUrl)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, active.IssuerSetId, got)
+
+	_, found, err = f.keeper.GetCurrentIssuerSet(f.ctx, "missing-policy", types.MsgSendTypeURL)
+	require.NoError(t, err)
+	require.False(t, found)
+
+	require.Error(t, f.keeper.SetCurrentIssuerSet(f.ctx, active.PolicyId, active.MsgTypeUrl, 999))
+
+	inactive := active
+	inactive.IssuerSetId = 2
+	inactive.Active = false
+	require.NoError(t, f.keeper.SetIssuerSet(f.ctx, inactive))
+	require.Error(t, f.keeper.SetCurrentIssuerSet(f.ctx, inactive.PolicyId, inactive.MsgTypeUrl, inactive.IssuerSetId))
+
+	require.Error(t, f.keeper.SetCurrentIssuerSet(f.ctx, "wrong-policy", active.MsgTypeUrl, active.IssuerSetId))
+	require.Error(t, f.keeper.SetCurrentIssuerSet(f.ctx, active.PolicyId, "/unsupported", active.IssuerSetId))
+}
+
+func validIssuerSet() types.IssuerSet {
+	return types.IssuerSet{
+		IssuerSetId: 1, Active: true, PolicyId: "policy-bank-send",
+		MsgTypeUrl: types.MsgSendTypeURL, ThresholdWeight: 1,
+	}
+}
+
+func validIssuer() types.Issuer {
+	return types.Issuer{
+		IssuerSetId: 1, IssuerId: "issuer-a",
+		KeyType:   types.IssuerKeyType_ISSUER_KEY_TYPE_ED25519,
+		PublicKey: make([]byte, ed25519.PublicKeySize), Weight: 1, Active: true,
+		ValidFromHeight: 1, ValidUntilHeight: 100,
+	}
 }

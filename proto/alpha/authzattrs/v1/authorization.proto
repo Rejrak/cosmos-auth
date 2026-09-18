@@ -59,3 +59,34 @@ message AuthorizationBatch {
   AuthorizationBatchSignDoc sign_doc = 1;
   repeated BatchSignature signatures = 2;
 }
+
+// IssuerKeyType identifies the public-key algorithm used by an issuer.
+enum IssuerKeyType {
+  ISSUER_KEY_TYPE_UNSPECIFIED = 0;
+  ISSUER_KEY_TYPE_ED25519 = 1;
+}
+
+// IssuerSet defines one weighted issuer trust set for a policy and message type.
+message IssuerSet {
+  option (gogoproto.equal) = true;
+
+  uint64 issuer_set_id = 1;
+  bool active = 2;
+  string policy_id = 3;
+  string msg_type_url = 4;
+  uint64 threshold_weight = 5;
+}
+
+// Issuer defines one issuer scoped to an issuer set.
+message Issuer {
+  option (gogoproto.equal) = true;
+
+  uint64 issuer_set_id = 1;
+  string issuer_id = 2;
+  IssuerKeyType key_type = 3;
+  bytes public_key = 4;
+  uint64 weight = 5;
+  bool active = 6;
+  int64 valid_from_height = 7;
+  int64 valid_until_height = 8;
+}

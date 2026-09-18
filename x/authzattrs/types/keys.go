@@ -9,6 +9,9 @@ const (
 )
 
 var (
-	ParamsKey         = collections.NewPrefix("p_authzattrs")
-	AuthorizationsKey = collections.NewPrefix("a_authzattrs")
+	ParamsKey            = collections.NewPrefix("p_authzattrs")
+	AuthorizationsKey    = collections.NewPrefix("a_authzattrs")
+	IssuerSetsKey        = collections.NewPrefix("s_authzattrs")
+	IssuersKey           = collections.NewPrefix("i_authzattrs")
+	CurrentIssuerSetsKey = collections.NewPrefix("c_authzattrs")
 )
