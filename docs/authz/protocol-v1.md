@@ -1,4 +1,4 @@
-# Protocol v1.2 — Authorization records and signed batch semantics
+# Protocol v1.2.1 — Authorization records and signed batch semantics
 
 `alpha` is the canonical owner of this contract. The middleware keeps an identical
 copy. Any protocol change requires an ADR, a `CONTRACT_VERSION` bump, and contract
@@ -72,8 +72,8 @@ bank_send_constraints {
 
 - `issuer_set_id`
   - unsigned integer greater than zero;
-  - identifies the issuer set that will later authenticate the batch carrying
-    this record.
+  - identifies the issuer set that authenticated the latest mutation of the
+    CURRENT record.
 
 - `valid_from_height`
   - positive block height;
@@ -298,7 +298,7 @@ path is implemented.
 
 ## 10. Cryptography V1
 
-The only issuer signature algorithm supported by Protocol V1.2 is Ed25519.
+The only issuer signature algorithm supported by Protocol V1.2.1 is Ed25519.
 
 ```text
 public key: raw 32 bytes
@@ -306,7 +306,7 @@ signature:  raw 64 bytes
 ```
 
 An issuer registry may define a `key_type` enum, but the only valid value for a
-V1.2 authorization batch is `ED25519`. Private keys are never stored on-chain and
+V1.2.1 authorization batch is `ED25519`. Private keys are never stored on-chain and
 MUST NOT be committed. Any private seed used by golden tests is a clearly marked
 TEST-ONLY, NON-PRODUCTION fixture.
 
@@ -454,6 +454,25 @@ only; a normal user cannot register itself as an issuer. The registry is
 chain-local, so `chain_id` is not duplicated in registry state; the sign doc is
 explicitly chain-bound.
 
+The chain also stores the chain-local, authority/governance-only selection:
+
+```text
+CurrentIssuerSet[(policy_id, msg_type_url)] -> issuer_set_id
+```
+
+A batch may mutate AuthorizationRecords only when:
+
+```text
+sign_doc.issuer_set_id ==
+  CurrentIssuerSet[(sign_doc.policy_id, "/cosmos.bank.v1beta1.MsgSend")]
+```
+
+A missing or different selection rejects the batch with
+`AUTHZ_BATCH_STALE_ISSUER_SET`. After governance rotates the selection from OLD
+to NEW, batches signed by OLD can no longer mutate records and batches signed by
+NEW can. Rotation does not compare or merge batch ID sequences across issuer
+sets.
+
 ## 15. Issuer scope and weighted quorum
 
 For an issuer to count toward quorum, all of the following MUST hold:
@@ -476,6 +495,10 @@ Insufficient weight rejects with `AUTHZ_BATCH_QUORUM_NOT_MET`. Unknown, inactive
 out-of-scope, duplicate, malformed or cryptographically invalid signatures reject
 with their stable reason code before application.
 
+Every addition to the accumulated quorum weight MUST be checked for `uint64`
+overflow. Overflow rejects the batch with `AUTHZ_BATCH_INVALID`; wraparound is
+never permitted.
+
 ## 16. Replay protection
 
 The chain stores:
@@ -493,6 +516,10 @@ batch_id > last_applied_batch_id[issuer_set_id]
 Otherwise it is rejected with `AUTHZ_BATCH_REPLAY`. Gaps in batch IDs are allowed.
 `last_applied_batch_id` is updated only after the entire batch succeeds. A failed
 batch does not consume its ID.
+
+Replay state is independent per `issuer_set_id`. Batch IDs remain monotonic only
+within their issuer set and batch IDs belonging to different issuer sets are
+never compared, including after issuer-set rotation.
 
 ## 17. Record/batch consistency
 
@@ -514,17 +541,21 @@ inconsistency between a record and its sign doc.
 For an incoming record with `revoked == true`:
 
 - a CURRENT record MUST exist at the same `(subject, msg_type_url)` logical key;
-- incoming `authorization_id` MUST exactly equal CURRENT `authorization_id`;
-- every incoming field except `revoked` MUST exactly equal the corresponding
-  CURRENT field.
+- incoming `authorization_id`, `subject`, `msg_type_url`, `policy_id`,
+  `policy_version`, `valid_from_height`, `valid_until_height`, and
+  `bank_send_constraints` MUST exactly equal their CURRENT values;
+- `revoked` may change from `false` to `true`;
+- incoming `issuer_set_id` MUST equal the current signing issuer set and may
+  therefore differ from CURRENT `issuer_set_id` after rotation.
 
 Otherwise reject with `AUTHZ_BATCH_STALE_REVOCATION`. A successful revocation
-persists the record with `revoked=true`; there is no silent delete.
+persists the record with `revoked=true` and the new `issuer_set_id`; there is no
+silent delete.
 
 For an incoming new grant with `revoked == false`, replacement of an existing
 CURRENT record requires an `authorization_id` different from the CURRENT
-`authorization_id`. Reusing the current ID is rejected with
-`AUTHZ_BATCH_INVALID`.
+`authorization_id`, and incoming `issuer_set_id` MUST equal the current signing
+issuer set. Reusing the current ID is rejected with `AUTHZ_BATCH_INVALID`.
 
 ## 19. Atomic application order
 
@@ -535,7 +566,7 @@ The conceptual order is:
 2. validate replay;
 3. validate and canonicalize records;
 4. validate record/batch metadata;
-5. load and validate the IssuerSet;
+5. validate the current IssuerSet selection, then load and validate the IssuerSet;
 6. validate unique issuer signatures;
 7. verify every signature;
 8. calculate weighted quorum;

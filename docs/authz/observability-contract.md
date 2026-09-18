@@ -31,6 +31,7 @@ AUTHZ_BATCH_QUORUM_NOT_MET
 AUTHZ_BATCH_REPLAY
 AUTHZ_BATCH_DUPLICATE_RECORD
 AUTHZ_BATCH_STALE_REVOCATION
+AUTHZ_BATCH_STALE_ISSUER_SET
 ```
 
 `AUTHZ_POLICY_MISMATCH` è riservato ai path di update/batch in cui vengono
@@ -52,7 +53,9 @@ I reason code batch hanno semantica stabile:
 - `AUTHZ_BATCH_QUORUM_NOT_MET`: peso valido unico insufficiente;
 - `AUTHZ_BATCH_REPLAY`: `batch_id` non maggiore dell'ultimo applicato;
 - `AUTHZ_BATCH_DUPLICATE_RECORD`: logical key record duplicata nel batch;
-- `AUTHZ_BATCH_STALE_REVOCATION`: revoca non riferita esattamente al CURRENT record.
+- `AUTHZ_BATCH_STALE_REVOCATION`: revoca non riferita esattamente al CURRENT record;
+- `AUTHZ_BATCH_STALE_ISSUER_SET`: `sign_doc.issuer_set_id` non è l'issuer set
+  corrente selezionato dalla governance per `(policy_id, msg_type_url)`.
 
 ## Chain events
 
