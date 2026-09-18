@@ -13,4 +13,5 @@ var (
 	ErrBatchUnknownIssuer      = errors.New("AUTHZ_BATCH_UNKNOWN_ISSUER")
 	ErrBatchQuorumNotMet       = errors.New("AUTHZ_BATCH_QUORUM_NOT_MET")
 	ErrBatchReplay             = errors.New("AUTHZ_BATCH_REPLAY")
+	ErrBatchStaleRevocation    = errors.New("AUTHZ_BATCH_STALE_REVOCATION")
 )
