@@ -4,6 +4,7 @@
 package types
 
 import (
+	bytes "bytes"
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -201,9 +202,219 @@ func (m *AuthorizationRecord) GetBankSendConstraints() BankSendConstraints {
 	return BankSendConstraints{}
 }
 
+// AuthorizationBatchSignDoc is the canonical payload signed by issuers.
+type AuthorizationBatchSignDoc struct {
+	Domain        string                 `protobuf:"bytes,1,opt,name=domain,proto3" json:"domain,omitempty"`
+	ChainId       string                 `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	BatchId       uint64                 `protobuf:"varint,3,opt,name=batch_id,json=batchId,proto3" json:"batch_id,omitempty"`
+	PolicyId      string                 `protobuf:"bytes,4,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
+	PolicyVersion uint64                 `protobuf:"varint,5,opt,name=policy_version,json=policyVersion,proto3" json:"policy_version,omitempty"`
+	PolicyHash    []byte                 `protobuf:"bytes,6,opt,name=policy_hash,json=policyHash,proto3" json:"policy_hash,omitempty"`
+	IssuerSetId   uint64                 `protobuf:"varint,7,opt,name=issuer_set_id,json=issuerSetId,proto3" json:"issuer_set_id,omitempty"`
+	Records       []*AuthorizationRecord `protobuf:"bytes,8,rep,name=records,proto3" json:"records,omitempty"`
+}
+
+func (m *AuthorizationBatchSignDoc) Reset()         { *m = AuthorizationBatchSignDoc{} }
+func (m *AuthorizationBatchSignDoc) String() string { return proto.CompactTextString(m) }
+func (*AuthorizationBatchSignDoc) ProtoMessage()    {}
+func (*AuthorizationBatchSignDoc) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ca609f79184793ea, []int{2}
+}
+func (m *AuthorizationBatchSignDoc) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AuthorizationBatchSignDoc) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AuthorizationBatchSignDoc.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AuthorizationBatchSignDoc) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthorizationBatchSignDoc.Merge(m, src)
+}
+func (m *AuthorizationBatchSignDoc) XXX_Size() int {
+	return m.Size()
+}
+func (m *AuthorizationBatchSignDoc) XXX_DiscardUnknown() {
+	xxx_messageInfo_AuthorizationBatchSignDoc.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AuthorizationBatchSignDoc proto.InternalMessageInfo
+
+func (m *AuthorizationBatchSignDoc) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
+func (m *AuthorizationBatchSignDoc) GetChainId() string {
+	if m != nil {
+		return m.ChainId
+	}
+	return ""
+}
+
+func (m *AuthorizationBatchSignDoc) GetBatchId() uint64 {
+	if m != nil {
+		return m.BatchId
+	}
+	return 0
+}
+
+func (m *AuthorizationBatchSignDoc) GetPolicyId() string {
+	if m != nil {
+		return m.PolicyId
+	}
+	return ""
+}
+
+func (m *AuthorizationBatchSignDoc) GetPolicyVersion() uint64 {
+	if m != nil {
+		return m.PolicyVersion
+	}
+	return 0
+}
+
+func (m *AuthorizationBatchSignDoc) GetPolicyHash() []byte {
+	if m != nil {
+		return m.PolicyHash
+	}
+	return nil
+}
+
+func (m *AuthorizationBatchSignDoc) GetIssuerSetId() uint64 {
+	if m != nil {
+		return m.IssuerSetId
+	}
+	return 0
+}
+
+func (m *AuthorizationBatchSignDoc) GetRecords() []*AuthorizationRecord {
+	if m != nil {
+		return m.Records
+	}
+	return nil
+}
+
+// BatchSignature is one issuer signature over canonical sign bytes.
+type BatchSignature struct {
+	IssuerId  string `protobuf:"bytes,1,opt,name=issuer_id,json=issuerId,proto3" json:"issuer_id,omitempty"`
+	Signature []byte `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+}
+
+func (m *BatchSignature) Reset()         { *m = BatchSignature{} }
+func (m *BatchSignature) String() string { return proto.CompactTextString(m) }
+func (*BatchSignature) ProtoMessage()    {}
+func (*BatchSignature) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ca609f79184793ea, []int{3}
+}
+func (m *BatchSignature) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BatchSignature) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BatchSignature.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BatchSignature) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BatchSignature.Merge(m, src)
+}
+func (m *BatchSignature) XXX_Size() int {
+	return m.Size()
+}
+func (m *BatchSignature) XXX_DiscardUnknown() {
+	xxx_messageInfo_BatchSignature.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BatchSignature proto.InternalMessageInfo
+
+func (m *BatchSignature) GetIssuerId() string {
+	if m != nil {
+		return m.IssuerId
+	}
+	return ""
+}
+
+func (m *BatchSignature) GetSignature() []byte {
+	if m != nil {
+		return m.Signature
+	}
+	return nil
+}
+
+// AuthorizationBatch carries a sign document and its issuer signatures.
+type AuthorizationBatch struct {
+	SignDoc    *AuthorizationBatchSignDoc `protobuf:"bytes,1,opt,name=sign_doc,json=signDoc,proto3" json:"sign_doc,omitempty"`
+	Signatures []*BatchSignature          `protobuf:"bytes,2,rep,name=signatures,proto3" json:"signatures,omitempty"`
+}
+
+func (m *AuthorizationBatch) Reset()         { *m = AuthorizationBatch{} }
+func (m *AuthorizationBatch) String() string { return proto.CompactTextString(m) }
+func (*AuthorizationBatch) ProtoMessage()    {}
+func (*AuthorizationBatch) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ca609f79184793ea, []int{4}
+}
+func (m *AuthorizationBatch) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AuthorizationBatch) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AuthorizationBatch.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AuthorizationBatch) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthorizationBatch.Merge(m, src)
+}
+func (m *AuthorizationBatch) XXX_Size() int {
+	return m.Size()
+}
+func (m *AuthorizationBatch) XXX_DiscardUnknown() {
+	xxx_messageInfo_AuthorizationBatch.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AuthorizationBatch proto.InternalMessageInfo
+
+func (m *AuthorizationBatch) GetSignDoc() *AuthorizationBatchSignDoc {
+	if m != nil {
+		return m.SignDoc
+	}
+	return nil
+}
+
+func (m *AuthorizationBatch) GetSignatures() []*BatchSignature {
+	if m != nil {
+		return m.Signatures
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*BankSendConstraints)(nil), "alpha.authzattrs.v1.BankSendConstraints")
 	proto.RegisterType((*AuthorizationRecord)(nil), "alpha.authzattrs.v1.AuthorizationRecord")
+	proto.RegisterType((*AuthorizationBatchSignDoc)(nil), "alpha.authzattrs.v1.AuthorizationBatchSignDoc")
+	proto.RegisterType((*BatchSignature)(nil), "alpha.authzattrs.v1.BatchSignature")
+	proto.RegisterType((*AuthorizationBatch)(nil), "alpha.authzattrs.v1.AuthorizationBatch")
 }
 
 func init() {
@@ -211,36 +422,48 @@ func init() {
 }
 
 var fileDescriptor_ca609f79184793ea = []byte{
-	// 461 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x92, 0xc1, 0x6e, 0xd3, 0x30,
-	0x1c, 0xc6, 0x6b, 0xd6, 0xad, 0xad, 0xc7, 0xd8, 0x70, 0x87, 0x64, 0x0d, 0x91, 0x45, 0x95, 0x10,
-	0x01, 0xa1, 0x54, 0x1b, 0x37, 0x6e, 0x2b, 0x12, 0xa2, 0xd7, 0x8c, 0x71, 0xe0, 0x12, 0x39, 0xb1,
-	0x49, 0x4d, 0x13, 0x3b, 0xb2, 0x9d, 0xa8, 0xdd, 0x53, 0xf0, 0x08, 0x3c, 0x0b, 0xa7, 0x1d, 0x77,
-	0xe4, 0x84, 0x50, 0x7b, 0xe1, 0x31, 0x50, 0xec, 0x94, 0x6d, 0x62, 0xb7, 0x7c, 0xdf, 0xf7, 0x93,
-	0xf3, 0xff, 0xeb, 0xff, 0xc1, 0x17, 0x24, 0x2f, 0x67, 0x64, 0x4c, 0x2a, 0x33, 0xbb, 0x24, 0xc6,
-	0x28, 0x3d, 0xae, 0x4f, 0xac, 0x92, 0x8a, 0x5f, 0x12, 0xc3, 0xa5, 0x08, 0x4b, 0x25, 0x8d, 0x44,
-	0x43, 0x0b, 0x86, 0x37, 0x60, 0x58, 0x9f, 0x1c, 0x1d, 0x66, 0x32, 0x93, 0x36, 0x1f, 0x37, 0x5f,
-	0x0e, 0x1d, 0xe5, 0x70, 0x38, 0x21, 0x62, 0x7e, 0xce, 0x04, 0x7d, 0x27, 0x85, 0x36, 0x8a, 0x70,
-	0x61, 0x34, 0x3a, 0x84, 0xdb, 0x94, 0x09, 0x59, 0x60, 0xe0, 0x83, 0x60, 0x10, 0x39, 0x81, 0x8e,
-	0x60, 0x5f, 0xb1, 0x94, 0xf1, 0x9a, 0x29, 0xfc, 0xc0, 0x06, 0xff, 0x34, 0x7a, 0x06, 0x61, 0x41,
-	0x16, 0x31, 0x29, 0x64, 0x25, 0x0c, 0xde, 0xb2, 0xe9, 0xa0, 0x20, 0x8b, 0x33, 0x6b, 0xbc, 0xed,
-	0xfe, 0xf9, 0x7e, 0x0c, 0x46, 0x3f, 0xb6, 0xe0, 0xf0, 0xec, 0xf6, 0xc0, 0x11, 0x4b, 0xa5, 0xa2,
-	0xe8, 0x25, 0x3c, 0xb8, 0xb3, 0x47, 0xcc, 0x69, 0xfb, 0xe7, 0xfd, 0x3b, 0xfe, 0x94, 0x22, 0x0c,
-	0x7b, 0xba, 0x4a, 0xbe, 0xb2, 0xd4, 0xb4, 0x23, 0x6c, 0x24, 0xf2, 0xe1, 0xc3, 0x42, 0x67, 0xb1,
-	0x59, 0x96, 0x2c, 0xae, 0x54, 0xde, 0xce, 0x00, 0x0b, 0x9d, 0x7d, 0x5c, 0x96, 0xec, 0x42, 0xe5,
-	0xe8, 0x29, 0x1c, 0x94, 0x32, 0xe7, 0xe9, 0xb2, 0x79, 0xbf, 0xeb, 0x16, 0x70, 0xc6, 0x94, 0xa2,
-	0xe7, 0xf0, 0x51, 0x1b, 0xd6, 0x4c, 0x69, 0x2e, 0x05, 0xde, 0xf6, 0x41, 0xd0, 0x8d, 0xf6, 0x9c,
-	0xfb, 0xc9, 0x99, 0x68, 0x04, 0xf7, 0xb8, 0xd6, 0x15, 0x53, 0xb1, 0x66, 0xa6, 0x79, 0x67, 0xc7,
-	0x52, 0xbb, 0xce, 0x3c, 0x67, 0x66, 0x4a, 0xd1, 0x2b, 0xf8, 0xb8, 0x26, 0x39, 0xa7, 0xf1, 0x17,
-	0x25, 0x8b, 0x78, 0xc6, 0x78, 0x36, 0x33, 0xb8, 0xe7, 0x83, 0x60, 0x2b, 0xda, 0xb7, 0xc1, 0x7b,
-	0x25, 0x8b, 0x0f, 0xd6, 0x46, 0xaf, 0x21, 0x72, 0x6c, 0x25, 0x0c, 0xcf, 0x37, 0x70, 0xdf, 0xc2,
-	0x07, 0x36, 0xb9, 0x68, 0x82, 0x96, 0xc6, 0xb0, 0xa7, 0x58, 0x2d, 0xe7, 0x8c, 0xe2, 0x81, 0x0f,
-	0x82, 0x7e, 0xb4, 0x91, 0x28, 0x81, 0x4f, 0x12, 0x22, 0xe6, 0xb1, 0x66, 0x82, 0xc6, 0xe9, 0xcd,
-	0x29, 0x31, 0xf4, 0x41, 0xb0, 0x7b, 0x1a, 0x84, 0xf7, 0x74, 0x22, 0xbc, 0xe7, 0xf4, 0x93, 0xee,
-	0xd5, 0xaf, 0xe3, 0x4e, 0x34, 0x4c, 0xfe, 0x8f, 0xdc, 0x11, 0x27, 0xa7, 0x57, 0x2b, 0x0f, 0x5c,
-	0xaf, 0x3c, 0xf0, 0x7b, 0xe5, 0x81, 0x6f, 0x6b, 0xaf, 0x73, 0xbd, 0xf6, 0x3a, 0x3f, 0xd7, 0x5e,
-	0xe7, 0x33, 0x76, 0x05, 0x5d, 0xdc, 0xae, 0x68, 0x73, 0x0e, 0x9d, 0xec, 0xd8, 0xb6, 0xbd, 0xf9,
-	0x1b, 0x00, 0x00, 0xff, 0xff, 0x14, 0x82, 0x14, 0xb3, 0xc3, 0x02, 0x00, 0x00,
+	// 641 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0xd3, 0x30,
+	0x14, 0x6f, 0xd6, 0x6e, 0x4d, 0x5f, 0xf7, 0x0f, 0x77, 0xa0, 0x6c, 0x40, 0x17, 0x0d, 0x21, 0x0a,
+	0x42, 0x9d, 0x36, 0x6e, 0xdc, 0xd6, 0x21, 0xb4, 0x1c, 0xc9, 0x18, 0x07, 0x2e, 0x91, 0x1b, 0x9b,
+	0xc6, 0x2c, 0xb1, 0x2b, 0xdb, 0xa9, 0xb6, 0x7d, 0x0a, 0x3e, 0x02, 0x67, 0x3e, 0x03, 0x27, 0x4e,
+	0x3b, 0xee, 0xc8, 0x09, 0xa1, 0xed, 0xc2, 0xc7, 0x40, 0x71, 0xdc, 0xae, 0x53, 0x37, 0x71, 0xe1,
+	0xd6, 0xdf, 0x9f, 0x3c, 0x3f, 0xbf, 0xdf, 0xab, 0xe1, 0x19, 0x4e, 0x87, 0x09, 0xde, 0xc6, 0xb9,
+	0x4e, 0xce, 0xb0, 0xd6, 0x52, 0x6d, 0x8f, 0x76, 0x0c, 0x12, 0x92, 0x9d, 0x61, 0xcd, 0x04, 0xef,
+	0x0e, 0xa5, 0xd0, 0x02, 0xb5, 0x8c, 0xb1, 0x7b, 0x6d, 0xec, 0x8e, 0x76, 0x36, 0xd6, 0x06, 0x62,
+	0x20, 0x8c, 0xbe, 0x5d, 0xfc, 0x2a, 0xad, 0x5b, 0x29, 0xb4, 0x7a, 0x98, 0x1f, 0x1f, 0x52, 0x4e,
+	0xf6, 0x05, 0x57, 0x5a, 0x62, 0xc6, 0xb5, 0x42, 0x6b, 0x30, 0x4f, 0x28, 0x17, 0x99, 0xe7, 0xf8,
+	0x4e, 0xa7, 0x11, 0x96, 0x00, 0x6d, 0x80, 0x2b, 0x69, 0x4c, 0xd9, 0x88, 0x4a, 0x6f, 0xce, 0x08,
+	0x13, 0x8c, 0x1e, 0x03, 0x64, 0xf8, 0x24, 0xc2, 0x99, 0xc8, 0xb9, 0xf6, 0xaa, 0x46, 0x6d, 0x64,
+	0xf8, 0x64, 0xcf, 0x10, 0xaf, 0x6b, 0x7f, 0xbe, 0x6e, 0x3a, 0x5b, 0x3f, 0xaa, 0xd0, 0xda, 0x9b,
+	0x6e, 0x38, 0xa4, 0xb1, 0x90, 0x04, 0x3d, 0x87, 0xd5, 0x1b, 0xf7, 0x88, 0x18, 0xb1, 0x27, 0xaf,
+	0xdc, 0xe0, 0x03, 0x82, 0x3c, 0xa8, 0xab, 0xbc, 0xff, 0x99, 0xc6, 0xda, 0xb6, 0x30, 0x86, 0xc8,
+	0x87, 0xc5, 0x4c, 0x0d, 0x22, 0x7d, 0x3a, 0xa4, 0x51, 0x2e, 0x53, 0xdb, 0x03, 0x64, 0x6a, 0xf0,
+	0xfe, 0x74, 0x48, 0x8f, 0x64, 0x8a, 0x1e, 0x42, 0x63, 0x28, 0x52, 0x16, 0x9f, 0x16, 0xf5, 0x6b,
+	0xe5, 0x05, 0x4a, 0x22, 0x20, 0xe8, 0x29, 0x2c, 0x5b, 0x71, 0x44, 0xa5, 0x62, 0x82, 0x7b, 0xf3,
+	0xbe, 0xd3, 0xa9, 0x85, 0x4b, 0x25, 0xfb, 0xa1, 0x24, 0xd1, 0x16, 0x2c, 0x31, 0xa5, 0x72, 0x2a,
+	0x23, 0x45, 0x75, 0x51, 0x67, 0xc1, 0xb8, 0x9a, 0x25, 0x79, 0x48, 0x75, 0x40, 0xd0, 0x0b, 0xb8,
+	0x37, 0xc2, 0x29, 0x23, 0xd1, 0x27, 0x29, 0xb2, 0x28, 0xa1, 0x6c, 0x90, 0x68, 0xaf, 0xee, 0x3b,
+	0x9d, 0x6a, 0xb8, 0x62, 0x84, 0xb7, 0x52, 0x64, 0x07, 0x86, 0x46, 0x2f, 0x01, 0x95, 0xde, 0x9c,
+	0x6b, 0x96, 0x8e, 0xcd, 0xae, 0x31, 0xaf, 0x1a, 0xe5, 0xa8, 0x10, 0xac, 0xdb, 0x83, 0xba, 0xa4,
+	0x23, 0x71, 0x4c, 0x89, 0xd7, 0xf0, 0x9d, 0x8e, 0x1b, 0x8e, 0x21, 0xea, 0xc3, 0xfd, 0x3e, 0xe6,
+	0xc7, 0x91, 0xa2, 0x9c, 0x44, 0xf1, 0x75, 0x94, 0x1e, 0xf8, 0x4e, 0xa7, 0xb9, 0xdb, 0xe9, 0xde,
+	0xb2, 0x13, 0xdd, 0x5b, 0xa2, 0xef, 0xd5, 0xce, 0x7f, 0x6d, 0x56, 0xc2, 0x56, 0x7f, 0x56, 0xb2,
+	0x21, 0x7e, 0x9f, 0x83, 0xf5, 0x1b, 0x21, 0xf6, 0xb0, 0x8e, 0x93, 0x43, 0x36, 0xe0, 0x6f, 0x44,
+	0x8c, 0x1e, 0xc0, 0x02, 0x11, 0x19, 0x66, 0xdc, 0x06, 0x68, 0x11, 0x5a, 0x07, 0x37, 0x4e, 0x30,
+	0x33, 0xd1, 0xda, 0xe0, 0x0c, 0x0e, 0x48, 0x21, 0xf5, 0x8b, 0x12, 0x85, 0x54, 0x35, 0xd3, 0xac,
+	0x1b, 0x1c, 0x90, 0xff, 0x92, 0xd8, 0x26, 0x34, 0xad, 0x2d, 0xc1, 0x2a, 0x31, 0x79, 0x2d, 0x86,
+	0x50, 0x52, 0x07, 0x58, 0x25, 0xb3, 0x91, 0xd6, 0x67, 0x23, 0xed, 0x15, 0x83, 0x2f, 0x76, 0x55,
+	0x79, 0xae, 0x5f, 0xbd, 0x73, 0xa0, 0xb7, 0x2c, 0x77, 0x38, 0xfe, 0xd0, 0x8e, 0xef, 0x1d, 0x2c,
+	0x4f, 0x06, 0x86, 0x75, 0x2e, 0x69, 0x71, 0x49, 0x7b, 0xfe, 0x64, 0xed, 0xdd, 0x92, 0x08, 0x08,
+	0x7a, 0x04, 0x0d, 0x35, 0x76, 0x9a, 0xc1, 0x2d, 0x86, 0xd7, 0x84, 0x2d, 0xf9, 0xcd, 0x01, 0x34,
+	0x9b, 0x08, 0x0a, 0xc0, 0x2d, 0x9c, 0x11, 0x11, 0xb1, 0x29, 0xdb, 0xdc, 0xed, 0xfe, 0xbb, 0xe9,
+	0xe9, 0x30, 0xc3, 0xba, 0xb2, 0xa9, 0xee, 0x03, 0x4c, 0x0e, 0x55, 0xde, 0x9c, 0x99, 0xc0, 0x93,
+	0x3b, 0x56, 0x6a, 0xfa, 0x6e, 0xe1, 0xd4, 0x67, 0x65, 0xb3, 0xbd, 0xdd, 0xf3, 0xcb, 0xb6, 0x73,
+	0x71, 0xd9, 0x76, 0x7e, 0x5f, 0xb6, 0x9d, 0x2f, 0x57, 0xed, 0xca, 0xc5, 0x55, 0xbb, 0xf2, 0xf3,
+	0xaa, 0x5d, 0xf9, 0xe8, 0x95, 0xef, 0xdb, 0xc9, 0xf4, 0x0b, 0x57, 0xfc, 0x9b, 0x55, 0x7f, 0xc1,
+	0x3c, 0x56, 0xaf, 0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0xe6, 0xa2, 0x03, 0x3c, 0x02, 0x05, 0x00,
+	0x00,
 }
 
 func (this *BankSendConstraints) Equal(that interface{}) bool {
@@ -321,6 +544,115 @@ func (this *AuthorizationRecord) Equal(that interface{}) bool {
 	}
 	if !this.BankSendConstraints.Equal(&that1.BankSendConstraints) {
 		return false
+	}
+	return true
+}
+func (this *AuthorizationBatchSignDoc) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*AuthorizationBatchSignDoc)
+	if !ok {
+		that2, ok := that.(AuthorizationBatchSignDoc)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Domain != that1.Domain {
+		return false
+	}
+	if this.ChainId != that1.ChainId {
+		return false
+	}
+	if this.BatchId != that1.BatchId {
+		return false
+	}
+	if this.PolicyId != that1.PolicyId {
+		return false
+	}
+	if this.PolicyVersion != that1.PolicyVersion {
+		return false
+	}
+	if !bytes.Equal(this.PolicyHash, that1.PolicyHash) {
+		return false
+	}
+	if this.IssuerSetId != that1.IssuerSetId {
+		return false
+	}
+	if len(this.Records) != len(that1.Records) {
+		return false
+	}
+	for i := range this.Records {
+		if !this.Records[i].Equal(that1.Records[i]) {
+			return false
+		}
+	}
+	return true
+}
+func (this *BatchSignature) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*BatchSignature)
+	if !ok {
+		that2, ok := that.(BatchSignature)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.IssuerId != that1.IssuerId {
+		return false
+	}
+	if !bytes.Equal(this.Signature, that1.Signature) {
+		return false
+	}
+	return true
+}
+func (this *AuthorizationBatch) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*AuthorizationBatch)
+	if !ok {
+		that2, ok := that.(AuthorizationBatch)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.SignDoc.Equal(that1.SignDoc) {
+		return false
+	}
+	if len(this.Signatures) != len(that1.Signatures) {
+		return false
+	}
+	for i := range this.Signatures {
+		if !this.Signatures[i].Equal(that1.Signatures[i]) {
+			return false
+		}
 	}
 	return true
 }
@@ -459,6 +791,172 @@ func (m *AuthorizationRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *AuthorizationBatchSignDoc) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AuthorizationBatchSignDoc) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AuthorizationBatchSignDoc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Records) > 0 {
+		for iNdEx := len(m.Records) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Records[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthorization(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if m.IssuerSetId != 0 {
+		i = encodeVarintAuthorization(dAtA, i, uint64(m.IssuerSetId))
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.PolicyHash) > 0 {
+		i -= len(m.PolicyHash)
+		copy(dAtA[i:], m.PolicyHash)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.PolicyHash)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if m.PolicyVersion != 0 {
+		i = encodeVarintAuthorization(dAtA, i, uint64(m.PolicyVersion))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.PolicyId) > 0 {
+		i -= len(m.PolicyId)
+		copy(dAtA[i:], m.PolicyId)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.PolicyId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.BatchId != 0 {
+		i = encodeVarintAuthorization(dAtA, i, uint64(m.BatchId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Domain) > 0 {
+		i -= len(m.Domain)
+		copy(dAtA[i:], m.Domain)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.Domain)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BatchSignature) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BatchSignature) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BatchSignature) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signature) > 0 {
+		i -= len(m.Signature)
+		copy(dAtA[i:], m.Signature)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.Signature)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.IssuerId) > 0 {
+		i -= len(m.IssuerId)
+		copy(dAtA[i:], m.IssuerId)
+		i = encodeVarintAuthorization(dAtA, i, uint64(len(m.IssuerId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AuthorizationBatch) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AuthorizationBatch) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AuthorizationBatch) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signatures) > 0 {
+		for iNdEx := len(m.Signatures) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Signatures[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAuthorization(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.SignDoc != nil {
+		{
+			size, err := m.SignDoc.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAuthorization(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintAuthorization(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAuthorization(v)
 	base := offset
@@ -530,6 +1028,82 @@ func (m *AuthorizationRecord) Size() (n int) {
 	}
 	l = m.BankSendConstraints.Size()
 	n += 1 + l + sovAuthorization(uint64(l))
+	return n
+}
+
+func (m *AuthorizationBatchSignDoc) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Domain)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	if m.BatchId != 0 {
+		n += 1 + sovAuthorization(uint64(m.BatchId))
+	}
+	l = len(m.PolicyId)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	if m.PolicyVersion != 0 {
+		n += 1 + sovAuthorization(uint64(m.PolicyVersion))
+	}
+	l = len(m.PolicyHash)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	if m.IssuerSetId != 0 {
+		n += 1 + sovAuthorization(uint64(m.IssuerSetId))
+	}
+	if len(m.Records) > 0 {
+		for _, e := range m.Records {
+			l = e.Size()
+			n += 1 + l + sovAuthorization(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BatchSignature) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.IssuerId)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	l = len(m.Signature)
+	if l > 0 {
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	return n
+}
+
+func (m *AuthorizationBatch) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SignDoc != nil {
+		l = m.SignDoc.Size()
+		n += 1 + l + sovAuthorization(uint64(l))
+	}
+	if len(m.Signatures) > 0 {
+		for _, e := range m.Signatures {
+			l = e.Size()
+			n += 1 + l + sovAuthorization(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -968,6 +1542,513 @@ func (m *AuthorizationRecord) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.BankSendConstraints.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthorization(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AuthorizationBatchSignDoc) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthorization
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AuthorizationBatchSignDoc: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AuthorizationBatchSignDoc: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Domain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Domain = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BatchId", wireType)
+			}
+			m.BatchId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BatchId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PolicyId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PolicyId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PolicyVersion", wireType)
+			}
+			m.PolicyVersion = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PolicyVersion |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PolicyHash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PolicyHash = append(m.PolicyHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.PolicyHash == nil {
+				m.PolicyHash = []byte{}
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IssuerSetId", wireType)
+			}
+			m.IssuerSetId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IssuerSetId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Records", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Records = append(m.Records, &AuthorizationRecord{})
+			if err := m.Records[len(m.Records)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthorization(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BatchSignature) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthorization
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BatchSignature: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BatchSignature: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IssuerId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IssuerId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signature = append(m.Signature[:0], dAtA[iNdEx:postIndex]...)
+			if m.Signature == nil {
+				m.Signature = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuthorization(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AuthorizationBatch) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuthorization
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AuthorizationBatch: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AuthorizationBatch: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SignDoc", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SignDoc == nil {
+				m.SignDoc = &AuthorizationBatchSignDoc{}
+			}
+			if err := m.SignDoc.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signatures", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuthorization
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuthorization
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signatures = append(m.Signatures, &BatchSignature{})
+			if err := m.Signatures[len(m.Signatures)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

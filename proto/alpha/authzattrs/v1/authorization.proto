@@ -29,3 +29,33 @@ message AuthorizationRecord {
   bool revoked = 9;
   BankSendConstraints bank_send_constraints = 10 [(gogoproto.nullable) = false];
 }
+
+// AuthorizationBatchSignDoc is the canonical payload signed by issuers.
+message AuthorizationBatchSignDoc {
+  option (gogoproto.equal) = true;
+
+  string domain = 1;
+  string chain_id = 2;
+  uint64 batch_id = 3;
+  string policy_id = 4;
+  uint64 policy_version = 5;
+  bytes policy_hash = 6;
+  uint64 issuer_set_id = 7;
+  repeated AuthorizationRecord records = 8;
+}
+
+// BatchSignature is one issuer signature over canonical sign bytes.
+message BatchSignature {
+  option (gogoproto.equal) = true;
+
+  string issuer_id = 1;
+  bytes signature = 2;
+}
+
+// AuthorizationBatch carries a sign document and its issuer signatures.
+message AuthorizationBatch {
+  option (gogoproto.equal) = true;
+
+  AuthorizationBatchSignDoc sign_doc = 1;
+  repeated BatchSignature signatures = 2;
+}

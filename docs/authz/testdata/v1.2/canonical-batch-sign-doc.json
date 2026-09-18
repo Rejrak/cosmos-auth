@@ -1,0 +1,56 @@
+{
+  "fixture": "TEST-ONLY canonical Protocol V1.2.1 sign bytes; no production secrets",
+  "domain": "alpha.authzattrs.batch.v1",
+  "chain_id": "alpha-golden-1",
+  "batch_id": 42,
+  "policy_id": "policy-bank-send",
+  "policy_version": 7,
+  "policy_hash_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "issuer_set_id": 9,
+  "records": [
+    {
+      "authorization_id": "authz-subject-1",
+      "subject": "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpjnp7du",
+      "msg_type_url": "/cosmos.bank.v1beta1.MsgSend",
+      "policy_id": "policy-bank-send",
+      "policy_version": 7,
+      "issuer_set_id": 9,
+      "valid_from_height": 100,
+      "valid_until_height": 200,
+      "revoked": false,
+      "bank_send_constraints": {
+        "denom": "uatom",
+        "receiver": "cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a",
+        "max_amount": "5000"
+      }
+    },
+    {
+      "authorization_id": "authz-subject-0",
+      "subject": "cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a",
+      "msg_type_url": "/cosmos.bank.v1beta1.MsgSend",
+      "policy_id": "policy-bank-send",
+      "policy_version": 7,
+      "issuer_set_id": 9,
+      "valid_from_height": 100,
+      "valid_until_height": 200,
+      "revoked": false,
+      "bank_send_constraints": {
+        "denom": "uatom",
+        "receiver": "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpjnp7du",
+        "max_amount": "2500"
+      }
+    }
+  ],
+  "canonical_record_order": [
+    {
+      "subject": "cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqnrql8a",
+      "msg_type_url": "/cosmos.bank.v1beta1.MsgSend"
+    },
+    {
+      "subject": "cosmos1qyqszqgpqyqszqgpqyqszqgpqyqszqgpjnp7du",
+      "msg_type_url": "/cosmos.bank.v1beta1.MsgSend"
+    }
+  ],
+  "expected_sign_bytes_hex": "0a19616c7068612e617574687a61747472732e62617463682e7631120e616c7068612d676f6c64656e2d31182a2210706f6c6963792d62616e6b2d73656e6428073220000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f380942b7010a0f617574687a2d7375626a6563742d30122d636f736d6f733171717171717171717171717171717171717171717171717171717171717171716e72716c38611a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e642210706f6c6963792d62616e6b2d73656e6428073009386440c801523c0a057561746f6d122d636f736d6f7331717971737a716770717971737a716770717971737a716770717971737a7167706a6e703764751a043235303042b7010a0f617574687a2d7375626a6563742d31122d636f736d6f7331717971737a716770717971737a716770717971737a716770717971737a7167706a6e703764751a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e642210706f6c6963792d62616e6b2d73656e6428073009386440c801523c0a057561746f6d122d636f736d6f733171717171717171717171717171717171717171717171717171717171717171716e72716c38611a0435303030",
+  "expected_batch_hash_hex": "14d2938e8ea496984403147ea96e33e792bb5fc2fce0d5cba41b3b90a147ca7f"
+}
