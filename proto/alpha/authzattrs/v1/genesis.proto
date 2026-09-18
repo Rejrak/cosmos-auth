@@ -8,6 +8,13 @@ import "gogoproto/gogo.proto";
 
 option go_package = "alpha/x/authzattrs/types";
 
+// CurrentIssuerSetSelection selects the current issuer set for one policy scope.
+message CurrentIssuerSetSelection {
+  string policy_id = 1;
+  string msg_type_url = 2;
+  uint64 issuer_set_id = 3;
+}
+
 // GenesisState defines the authzattrs module genesis state.
 message GenesisState {
   Params params = 1 [
@@ -15,4 +22,7 @@ message GenesisState {
     (amino.dont_omitempty) = true
   ];
   repeated AuthorizationRecord authorizations = 2 [(gogoproto.nullable) = false];
+  repeated IssuerSet issuer_sets = 3 [(gogoproto.nullable) = false];
+  repeated Issuer issuers = 4 [(gogoproto.nullable) = false];
+  repeated CurrentIssuerSetSelection current_issuer_sets = 5 [(gogoproto.nullable) = false];
 }

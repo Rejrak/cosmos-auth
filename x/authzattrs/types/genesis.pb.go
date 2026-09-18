@@ -24,17 +24,81 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// CurrentIssuerSetSelection selects the current issuer set for one policy scope.
+type CurrentIssuerSetSelection struct {
+	PolicyId    string `protobuf:"bytes,1,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
+	MsgTypeUrl  string `protobuf:"bytes,2,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
+	IssuerSetId uint64 `protobuf:"varint,3,opt,name=issuer_set_id,json=issuerSetId,proto3" json:"issuer_set_id,omitempty"`
+}
+
+func (m *CurrentIssuerSetSelection) Reset()         { *m = CurrentIssuerSetSelection{} }
+func (m *CurrentIssuerSetSelection) String() string { return proto.CompactTextString(m) }
+func (*CurrentIssuerSetSelection) ProtoMessage()    {}
+func (*CurrentIssuerSetSelection) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ba6556b64ca44530, []int{0}
+}
+func (m *CurrentIssuerSetSelection) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CurrentIssuerSetSelection) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CurrentIssuerSetSelection.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CurrentIssuerSetSelection) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CurrentIssuerSetSelection.Merge(m, src)
+}
+func (m *CurrentIssuerSetSelection) XXX_Size() int {
+	return m.Size()
+}
+func (m *CurrentIssuerSetSelection) XXX_DiscardUnknown() {
+	xxx_messageInfo_CurrentIssuerSetSelection.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CurrentIssuerSetSelection proto.InternalMessageInfo
+
+func (m *CurrentIssuerSetSelection) GetPolicyId() string {
+	if m != nil {
+		return m.PolicyId
+	}
+	return ""
+}
+
+func (m *CurrentIssuerSetSelection) GetMsgTypeUrl() string {
+	if m != nil {
+		return m.MsgTypeUrl
+	}
+	return ""
+}
+
+func (m *CurrentIssuerSetSelection) GetIssuerSetId() uint64 {
+	if m != nil {
+		return m.IssuerSetId
+	}
+	return 0
+}
+
 // GenesisState defines the authzattrs module genesis state.
 type GenesisState struct {
-	Params         Params                `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	Authorizations []AuthorizationRecord `protobuf:"bytes,2,rep,name=authorizations,proto3" json:"authorizations"`
+	Params            Params                      `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Authorizations    []AuthorizationRecord       `protobuf:"bytes,2,rep,name=authorizations,proto3" json:"authorizations"`
+	IssuerSets        []IssuerSet                 `protobuf:"bytes,3,rep,name=issuer_sets,json=issuerSets,proto3" json:"issuer_sets"`
+	Issuers           []Issuer                    `protobuf:"bytes,4,rep,name=issuers,proto3" json:"issuers"`
+	CurrentIssuerSets []CurrentIssuerSetSelection `protobuf:"bytes,5,rep,name=current_issuer_sets,json=currentIssuerSets,proto3" json:"current_issuer_sets"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
 func (m *GenesisState) String() string { return proto.CompactTextString(m) }
 func (*GenesisState) ProtoMessage()    {}
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ba6556b64ca44530, []int{0}
+	return fileDescriptor_ba6556b64ca44530, []int{1}
 }
 func (m *GenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -77,30 +141,104 @@ func (m *GenesisState) GetAuthorizations() []AuthorizationRecord {
 	return nil
 }
 
+func (m *GenesisState) GetIssuerSets() []IssuerSet {
+	if m != nil {
+		return m.IssuerSets
+	}
+	return nil
+}
+
+func (m *GenesisState) GetIssuers() []Issuer {
+	if m != nil {
+		return m.Issuers
+	}
+	return nil
+}
+
+func (m *GenesisState) GetCurrentIssuerSets() []CurrentIssuerSetSelection {
+	if m != nil {
+		return m.CurrentIssuerSets
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterType((*CurrentIssuerSetSelection)(nil), "alpha.authzattrs.v1.CurrentIssuerSetSelection")
 	proto.RegisterType((*GenesisState)(nil), "alpha.authzattrs.v1.GenesisState")
 }
 
 func init() { proto.RegisterFile("alpha/authzattrs/v1/genesis.proto", fileDescriptor_ba6556b64ca44530) }
 
 var fileDescriptor_ba6556b64ca44530 = []byte{
-	// 249 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4c, 0xcc, 0x29, 0xc8,
-	0x48, 0xd4, 0x4f, 0x2c, 0x2d, 0xc9, 0xa8, 0x4a, 0x2c, 0x29, 0x29, 0x2a, 0xd6, 0x2f, 0x33, 0xd4,
-	0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x06,
-	0x2b, 0xd1, 0x43, 0x28, 0xd1, 0x2b, 0x33, 0x94, 0x52, 0xc0, 0xa6, 0xaf, 0x20, 0xb1, 0x28, 0x31,
-	0x17, 0xaa, 0x4d, 0x4a, 0x1d, 0x9b, 0x0a, 0x10, 0x2f, 0xbf, 0x28, 0xb3, 0x2a, 0xb1, 0x24, 0x33,
-	0x3f, 0x0f, 0xaa, 0x50, 0x30, 0x31, 0x37, 0x33, 0x2f, 0x5f, 0x1f, 0x4c, 0x42, 0x85, 0x44, 0xd2,
-	0xf3, 0xd3, 0xf3, 0xc1, 0x4c, 0x7d, 0x10, 0x0b, 0x22, 0xaa, 0xb4, 0x8c, 0x91, 0x8b, 0xc7, 0x1d,
-	0xe2, 0xb4, 0xe0, 0x92, 0xc4, 0x92, 0x54, 0x21, 0x3b, 0x2e, 0x36, 0x88, 0x95, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0xdc, 0x46, 0xd2, 0x7a, 0x58, 0x9c, 0xaa, 0x17, 0x00, 0x56, 0xe2, 0xc4, 0x79, 0xe2,
-	0x9e, 0x3c, 0xc3, 0x8a, 0xe7, 0x1b, 0xb4, 0x18, 0x83, 0xa0, 0xba, 0x84, 0xc2, 0xb8, 0xf8, 0x50,
-	0x1c, 0x54, 0x2c, 0xc1, 0xa4, 0xc0, 0xac, 0xc1, 0x6d, 0xa4, 0x81, 0xd5, 0x1c, 0x47, 0x64, 0xa5,
-	0x41, 0xa9, 0xc9, 0xf9, 0x45, 0x29, 0x4e, 0x2c, 0x20, 0x43, 0x83, 0xd0, 0x4c, 0x71, 0x32, 0x3a,
-	0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63,
-	0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0x09, 0x48, 0xa0, 0x54, 0x20, 0x07,
-	0x4b, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0xd8, 0x8f, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xbb, 0x93, 0x3d, 0xe6, 0x91, 0x01, 0x00, 0x00,
+	// 416 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0x3d, 0x8f, 0xd3, 0x30,
+	0x18, 0xc7, 0x93, 0xa6, 0x14, 0xea, 0x14, 0xa4, 0xba, 0x0c, 0xa1, 0x95, 0x42, 0xe8, 0x42, 0xc4,
+	0x90, 0xa8, 0x65, 0x44, 0x42, 0xa2, 0x08, 0xa1, 0x6e, 0x28, 0x05, 0x06, 0x96, 0xc8, 0x24, 0x56,
+	0x6a, 0x29, 0x89, 0x23, 0xdb, 0xa9, 0x68, 0x07, 0x3e, 0x43, 0x3f, 0x06, 0x23, 0x1f, 0xa3, 0x63,
+	0xc7, 0x9b, 0x4e, 0xa7, 0x76, 0xb8, 0xaf, 0x71, 0x8a, 0x93, 0xbe, 0x5c, 0x95, 0xbb, 0x25, 0xb2,
+	0x9f, 0xfc, 0xff, 0xbf, 0xc7, 0xcf, 0x0b, 0x78, 0x83, 0xe2, 0x6c, 0x8e, 0x5c, 0x94, 0x8b, 0xf9,
+	0x0a, 0x09, 0xc1, 0xb8, 0xbb, 0x18, 0xb9, 0x11, 0x4e, 0x31, 0x27, 0xdc, 0xc9, 0x18, 0x15, 0x14,
+	0xf6, 0xa4, 0xc4, 0x39, 0x49, 0x9c, 0xc5, 0xa8, 0x6f, 0xd5, 0xf9, 0x32, 0xc4, 0x50, 0x52, 0xd9,
+	0xfa, 0x6f, 0xeb, 0x14, 0xc5, 0x8d, 0x32, 0xb2, 0x42, 0x82, 0xd0, 0xb4, 0x12, 0x76, 0x51, 0x42,
+	0x52, 0xea, 0xca, 0x6f, 0x15, 0x7a, 0x19, 0xd1, 0x88, 0xca, 0xa3, 0x5b, 0x9c, 0xca, 0xe8, 0xf0,
+	0x2f, 0x78, 0xf5, 0x39, 0x67, 0x0c, 0xa7, 0x62, 0xca, 0x79, 0x8e, 0xd9, 0x0c, 0x8b, 0x19, 0x8e,
+	0x71, 0x50, 0xb0, 0xe0, 0x00, 0xb4, 0x33, 0x1a, 0x93, 0x60, 0xe9, 0x93, 0xd0, 0x50, 0x2d, 0xd5,
+	0x6e, 0x7b, 0xcf, 0xca, 0xc0, 0x34, 0x84, 0x16, 0xe8, 0x24, 0x3c, 0xf2, 0xc5, 0x32, 0xc3, 0x7e,
+	0xce, 0x62, 0xa3, 0x21, 0xff, 0x83, 0x84, 0x47, 0xdf, 0x97, 0x19, 0xfe, 0xc1, 0x62, 0x38, 0x04,
+	0xcf, 0x89, 0x84, 0xfa, 0x1c, 0x8b, 0x02, 0xa1, 0x59, 0xaa, 0xdd, 0xf4, 0x74, 0x72, 0xc8, 0x34,
+	0x0d, 0x87, 0x6b, 0x0d, 0x74, 0xbe, 0x96, 0xad, 0x99, 0x09, 0x24, 0x30, 0xfc, 0x08, 0x5a, 0x65,
+	0xc9, 0x32, 0xa1, 0x3e, 0x1e, 0x38, 0x35, 0xad, 0x72, 0xbe, 0x49, 0xc9, 0xa4, 0xbd, 0xb9, 0x7e,
+	0xad, 0xfc, 0xbb, 0xfd, 0xff, 0x4e, 0xf5, 0x2a, 0x17, 0xfc, 0x09, 0x5e, 0xdc, 0x6b, 0x08, 0x37,
+	0x1a, 0x96, 0x66, 0xeb, 0x63, 0xbb, 0x96, 0xf3, 0xe9, 0x5c, 0xea, 0xe1, 0x80, 0xb2, 0x70, 0xd2,
+	0x2c, 0xa0, 0xde, 0x05, 0x05, 0x7e, 0x01, 0xfa, 0xa9, 0x18, 0x6e, 0x68, 0x12, 0x6a, 0xd6, 0x42,
+	0x8f, 0x9d, 0xac, 0x50, 0xe0, 0x58, 0x30, 0x87, 0x1f, 0xc0, 0xd3, 0xf2, 0xc6, 0x8d, 0xa6, 0x44,
+	0x0c, 0x1e, 0x41, 0x54, 0xfe, 0x83, 0x03, 0x86, 0xa0, 0x17, 0x94, 0xc3, 0xf2, 0xcf, 0xdf, 0xf2,
+	0x44, 0x82, 0x9c, 0x5a, 0xd0, 0x83, 0xc3, 0xad, 0xd8, 0xdd, 0xe0, 0x42, 0xc0, 0x27, 0xe3, 0xcd,
+	0xce, 0x54, 0xb7, 0x3b, 0x53, 0xbd, 0xd9, 0x99, 0xea, 0x7a, 0x6f, 0x2a, 0xdb, 0xbd, 0xa9, 0x5c,
+	0xed, 0x4d, 0xe5, 0x97, 0x51, 0xae, 0xdf, 0x9f, 0xf3, 0x05, 0x2c, 0xe6, 0xcf, 0x7f, 0xb7, 0xe4,
+	0x36, 0xbd, 0xbf, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xa0, 0x61, 0x2a, 0xe0, 0xfb, 0x02, 0x00, 0x00,
+}
+
+func (m *CurrentIssuerSetSelection) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CurrentIssuerSetSelection) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CurrentIssuerSetSelection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IssuerSetId != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.IssuerSetId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.MsgTypeUrl) > 0 {
+		i -= len(m.MsgTypeUrl)
+		copy(dAtA[i:], m.MsgTypeUrl)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.MsgTypeUrl)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PolicyId) > 0 {
+		i -= len(m.PolicyId)
+		copy(dAtA[i:], m.PolicyId)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.PolicyId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -123,6 +261,48 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.CurrentIssuerSets) > 0 {
+		for iNdEx := len(m.CurrentIssuerSets) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.CurrentIssuerSets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Issuers) > 0 {
+		for iNdEx := len(m.Issuers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Issuers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.IssuerSets) > 0 {
+		for iNdEx := len(m.IssuerSets) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.IssuerSets[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
 	if len(m.Authorizations) > 0 {
 		for iNdEx := len(m.Authorizations) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -161,6 +341,26 @@ func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *CurrentIssuerSetSelection) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.PolicyId)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.MsgTypeUrl)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.IssuerSetId != 0 {
+		n += 1 + sovGenesis(uint64(m.IssuerSetId))
+	}
+	return n
+}
+
 func (m *GenesisState) Size() (n int) {
 	if m == nil {
 		return 0
@@ -175,6 +375,24 @@ func (m *GenesisState) Size() (n int) {
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	if len(m.IssuerSets) > 0 {
+		for _, e := range m.IssuerSets {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.Issuers) > 0 {
+		for _, e := range m.Issuers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.CurrentIssuerSets) > 0 {
+		for _, e := range m.CurrentIssuerSets {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -183,6 +401,139 @@ func sovGenesis(x uint64) (n int) {
 }
 func sozGenesis(x uint64) (n int) {
 	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *CurrentIssuerSetSelection) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CurrentIssuerSetSelection: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CurrentIssuerSetSelection: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PolicyId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PolicyId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IssuerSetId", wireType)
+			}
+			m.IssuerSetId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IssuerSetId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -277,6 +628,108 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.Authorizations = append(m.Authorizations, AuthorizationRecord{})
 			if err := m.Authorizations[len(m.Authorizations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IssuerSets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IssuerSets = append(m.IssuerSets, IssuerSet{})
+			if err := m.IssuerSets[len(m.IssuerSets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Issuers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Issuers = append(m.Issuers, Issuer{})
+			if err := m.Issuers[len(m.Issuers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CurrentIssuerSets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CurrentIssuerSets = append(m.CurrentIssuerSets, CurrentIssuerSetSelection{})
+			if err := m.CurrentIssuerSets[len(m.CurrentIssuerSets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
