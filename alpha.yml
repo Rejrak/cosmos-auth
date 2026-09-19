@@ -59,6 +59,39 @@ faucet:
 
 genesis:
   chain_id: alpha-1
+  app_state:
+    authzattrs:
+      params: {}
+      authorizations: []
+      # LOCAL DEVELOPMENT / DEMO ISSUERS ONLY. Public keys only; never add the test private seeds.
+      issuer_sets:
+        - issuer_set_id: "9"
+          active: true
+          policy_id: policy-bank-send
+          msg_type_url: /cosmos.bank.v1beta1.MsgSend
+          threshold_weight: "5"
+      issuers:
+        - issuer_set_id: "9"
+          issuer_id: issuer-alpha
+          key_type: ISSUER_KEY_TYPE_ED25519
+          public_key: A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=
+          weight: "2"
+          active: true
+          valid_from_height: "1"
+          valid_until_height: "9223372036854775807"
+        - issuer_set_id: "9"
+          issuer_id: issuer-beta
+          key_type: ISSUER_KEY_TYPE_ED25519
+          public_key: Kay64UG8yvCyLhqU000LxzYeUm0L/hLIl5S8kyKWbdc=
+          weight: "3"
+          active: true
+          valid_from_height: "1"
+          valid_until_height: "9223372036854775807"
+      current_issuer_sets:
+        - policy_id: policy-bank-send
+          msg_type_url: /cosmos.bank.v1beta1.MsgSend
+          issuer_set_id: "9"
+      last_applied_batch_ids: []
 
 validators:
   - name: alice
@@ -76,4 +109,3 @@ validators:
       rpc:
         laddr: "tcp://0.0.0.0:26657"
         pprof_laddr: "0.0.0.0:6060"
-
