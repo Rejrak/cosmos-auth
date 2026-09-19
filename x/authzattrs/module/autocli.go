@@ -18,10 +18,10 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: types.Msg_serviceDesc.ServiceName,
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{{
-				RpcMethod: "UpdateParams",
-				Skip:      true,
-			}},
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+				{RpcMethod: "UpdateParams", Skip: true},
+				{RpcMethod: "BatchUpsertAuthorizations", Skip: true},
+			},
 		},
 	}
 }
