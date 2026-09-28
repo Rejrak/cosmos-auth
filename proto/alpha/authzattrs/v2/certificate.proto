@@ -1,0 +1,44 @@
+syntax = "proto3";
+package alpha.authzattrs.v2;
+
+option go_package = "alpha/x/authzattrs/v2";
+
+message FeeCoinV2 {
+  string denom = 1;
+  string amount = 2;
+}
+
+message AuthorizationIntentV2 {
+  string chain_id = 1;
+  string subject = 2;
+  string receiver = 3;
+  string denom = 4;
+  string amount = 5;
+  uint64 account_number = 6;
+  uint64 sequence = 7;
+  uint64 timeout_height = 8;
+  string memo = 9;
+  repeated FeeCoinV2 fee_amount = 10;
+  uint64 gas_limit = 11;
+}
+
+message AuthorizationCertificateSignDocV2 {
+  string domain = 1;
+  AuthorizationIntentV2 intent = 2;
+  string policy_id = 3;
+  uint64 policy_version = 4;
+  bytes policy_hash = 5;
+  uint64 issuer_set_id = 6;
+  int64 valid_from_height = 7;
+  int64 valid_until_height = 8;
+}
+
+message IssuerSignatureV2 {
+  string issuer_id = 1;
+  bytes signature = 2;
+}
+
+message AuthorizationCertificateV2 {
+  AuthorizationCertificateSignDocV2 sign_doc = 1;
+  repeated IssuerSignatureV2 signatures = 2;
+}
