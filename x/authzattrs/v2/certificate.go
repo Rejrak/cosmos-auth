@@ -33,6 +33,10 @@ var (
 	ErrBadSignatureV2       = errors.New("AUTHZ_V2_BAD_SIGNATURE")
 	ErrDuplicateSignatureV2 = errors.New("AUTHZ_V2_DUPLICATE_SIGNATURE")
 	ErrQuorumNotMetV2       = errors.New("AUTHZ_V2_QUORUM_NOT_MET")
+	ErrMalformedExtensionV2 = errors.New("AUTHZ_V2_MALFORMED_EXTENSION")
+	ErrUnsupportedTxV2      = errors.New("AUTHZ_V2_UNSUPPORTED_TX")
+	ErrIntentMismatchV2     = errors.New("AUTHZ_V2_INTENT_MISMATCH")
+	ErrInvalidRawTxV2       = errors.New("AUTHZ_V2_INVALID_RAW_TX")
 )
 
 func canonicalAddress(codec address.Codec, value string) bool {
