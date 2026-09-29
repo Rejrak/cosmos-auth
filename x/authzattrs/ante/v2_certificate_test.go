@@ -83,6 +83,7 @@ func TestV2Classification(t *testing.T) {
 type v2Accounts struct {
 	codec   address.Codec
 	account sdk.AccountI
+	params  authtypes.Params
 }
 
 func (a v2Accounts) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
@@ -91,7 +92,8 @@ func (a v2Accounts) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.Accou
 	}
 	return nil
 }
-func (a v2Accounts) AddressCodec() address.Codec { return a.codec }
+func (a v2Accounts) AddressCodec() address.Codec                { return a.codec }
+func (a v2Accounts) GetParams(context.Context) authtypes.Params { return a.params }
 
 type v2TxFixture struct {
 	t           *testing.T
@@ -106,8 +108,12 @@ type v2TxFixture struct {
 	raw         txtypes.TxRaw
 }
 
-func fixtureV2(t *testing.T) *v2TxFixture {
+func fixtureV2(t *testing.T, configuredParams ...authtypes.Params) *v2TxFixture {
 	t.Helper()
+	params := authtypes.DefaultParams()
+	if len(configuredParams) != 0 {
+		params = configuredParams[0]
+	}
 	enc := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 	banktypes.RegisterInterfaces(enc.InterfaceRegistry)
 	authztypes.RegisterInterfaces(enc.InterfaceRegistry)
@@ -149,7 +155,7 @@ func fixtureV2(t *testing.T) *v2TxFixture {
 		certificate.Signatures = append(certificate.Signatures, &v2.IssuerSignatureV2{IssuerId: item.id, Signature: signature})
 	}
 	f := &v2TxFixture{t: t, ctx: ctx, codec: enc, account: account, certificate: certificate,
-		decorator: ante.NewV2CertificateDecorator(k, v2Accounts{codec: addrCodec, account: account}, enc.Codec),
+		decorator: ante.NewV2CertificateDecorator(k, v2Accounts{codec: addrCodec, account: account, params: params}, enc.Codec),
 		msg:       banktypes.MsgSend{FromAddress: v2Subject, ToAddress: v2Receiver, Amount: sdk.NewCoins(sdk.NewInt64Coin("token", 1000))},
 		authInfo:  txtypes.AuthInfo{SignerInfos: []*txtypes.SignerInfo{{Sequence: 3, ModeInfo: &txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}}}, Fee: &txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), GasLimit: 200000}},
 	}
@@ -280,15 +286,106 @@ func TestV2TransactionIntentAndShapeFailures(t *testing.T) {
 
 func TestV2DecoratorNeverFallsBack(t *testing.T) {
 	f := fixtureV2(t)
+	f.ctx = f.ctx.WithGasMeter(storetypes.NewGasMeter(1))
 	called := false
 	next := func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) { called = true; return ctx, nil }
 	_, err := f.decorator.AnteHandle(f.ctx, extensionTestTx{}, false, next)
 	require.NoError(t, err)
 	require.True(t, called)
+	require.Zero(t, f.ctx.GasMeter().GasConsumed())
 	called = false
 	_, err = f.decorator.AnteHandle(f.ctx, extensionTestTx{critical: []*codectypes.Any{{TypeUrl: "/other"}}}, false, next)
 	require.ErrorIs(t, err, v2.ErrMalformedExtensionV2)
 	require.False(t, called)
+}
+
+func TestV2VerificationGasUsesAuthParams(t *testing.T) {
+	var previousGas uint64
+	for _, cost := range []uint64{3, 11} {
+		params := authtypes.DefaultParams()
+		params.TxSizeCostPerByte = cost
+		params.SigVerifyCostED25519 = 41
+		f := fixtureV2(t, params)
+		tx := f.build()
+		f.ctx = f.ctx.WithGasMeter(storetypes.NewGasMeter(100000))
+		require.NoError(t, f.run(tx))
+		gas := f.ctx.GasMeter().GasConsumed()
+		require.Positive(t, gas)
+		if previousGas != 0 {
+			require.Equal(t, uint64(len(f.ctx.TxBytes()))*(11-3), gas-previousGas)
+		}
+		previousGas = gas
+	}
+	// Even a rejected raw protobuf is charged before recursive inspection.
+	params := authtypes.DefaultParams()
+	params.TxSizeCostPerByte = 3
+	f := fixtureV2(t, params)
+	tx := f.build()
+	f.ctx = f.ctx.WithTxBytes(appendUnknown(f.ctx.TxBytes())).WithGasMeter(storetypes.NewGasMeter(100000))
+	require.ErrorIs(t, f.run(tx), v2.ErrInvalidRawTxV2)
+	require.Equal(t, uint64(len(f.ctx.TxBytes()))*params.TxSizeCostPerByte, f.ctx.GasMeter().GasConsumed())
+}
+
+func TestV2VerificationGasChargesEachSuppliedSignature(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		count int
+		bad   bool
+		want  error
+	}{
+		{"one valid but no quorum", 1, false, v2.ErrQuorumNotMetV2},
+		{"two valid", 2, false, nil},
+		{"early bad signature", 2, true, v2.ErrBadSignatureV2},
+		{"too many signatures", 17, false, v2.ErrInvalidCertificateV2},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			var previousGas uint64
+			for _, cost := range []uint64{41, 67} {
+				params := authtypes.DefaultParams()
+				params.TxSizeCostPerByte = 3
+				params.SigVerifyCostED25519 = cost
+				f := fixtureV2(t, params)
+				if tt.count == 1 {
+					f.certificate.Signatures = f.certificate.Signatures[:1]
+				} else if tt.count == 17 {
+					for len(f.certificate.Signatures) < 17 {
+						f.certificate.Signatures = append(f.certificate.Signatures, f.certificate.Signatures[0])
+					}
+				}
+				if tt.bad {
+					f.certificate.Signatures[0].Signature[0] ^= 1
+				}
+				tx := f.build()
+				f.ctx = f.ctx.WithGasMeter(storetypes.NewGasMeter(100000))
+				err := f.run(tx)
+				if tt.want == nil {
+					require.NoError(t, err)
+				} else {
+					require.ErrorIs(t, err, tt.want)
+				}
+				gas := f.ctx.GasMeter().GasConsumed()
+				if previousGas != 0 {
+					charged := uint64(tt.count)
+					if tt.count > v2.MaxSignaturesV2 {
+						charged = 0
+					}
+					require.Equal(t, charged*(67-41), gas-previousGas)
+				}
+				previousGas = gas
+			}
+		})
+	}
+}
+
+func TestV2VerificationGasOutOfGasPanics(t *testing.T) {
+	f := fixtureV2(t)
+	tx := f.build()
+	params := authtypes.DefaultParams()
+	rawGas := uint64(len(f.ctx.TxBytes())) * params.TxSizeCostPerByte
+	f.ctx = f.ctx.WithGasMeter(storetypes.NewGasMeter(rawGas + params.SigVerifyCostED25519 - 1))
+	require.PanicsWithValue(t, storetypes.ErrorOutOfGas{Descriptor: "v2 issuer Ed25519 verification"}, func() {
+		_ = f.run(tx)
+	})
 }
 
 func TestV2RawStrictness(t *testing.T) {

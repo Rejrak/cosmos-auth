@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/bits"
 	"strings"
 
 	"cosmossdk.io/core/address"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -71,6 +74,7 @@ func V2ExtensionOptionChecker(option *codectypes.Any) bool {
 
 type V2AccountKeeper interface {
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	GetParams(context.Context) authtypes.Params
 	AddressCodec() address.Codec
 }
 
@@ -111,6 +115,12 @@ func (d V2CertificateDecorator) VerifyV2Transaction(ctx sdk.Context, tx sdk.Tx) 
 	if len(rawBytes) == 0 {
 		return v2.ErrInvalidRawTxV2
 	}
+	params := d.accounts.GetParams(ctx)
+	hi, rawGas := bits.Mul64(uint64(len(rawBytes)), params.TxSizeCostPerByte)
+	if hi != 0 {
+		panic(storetypes.ErrorGasOverflow{Descriptor: "v2 strict raw validation"})
+	}
+	ctx.GasMeter().ConsumeGas(rawGas, "v2 strict raw validation")
 	registry := d.codec.InterfaceRegistry()
 	var raw txtypes.TxRaw
 	if err := unknownproto.RejectUnknownFieldsStrict(rawBytes, &raw, registry); err != nil {
@@ -216,6 +226,11 @@ func (d V2CertificateDecorator) VerifyV2Transaction(ctx sdk.Context, tx sdk.Tx) 
 	}
 	if !proto.Equal(intent, certificate.SignDoc.Intent) {
 		return v2.ErrIntentMismatchV2
+	}
+	if len(certificate.Signatures) > 0 && len(certificate.Signatures) <= v2.MaxSignaturesV2 {
+		for range certificate.Signatures {
+			ctx.GasMeter().ConsumeGas(params.SigVerifyCostED25519, "v2 issuer Ed25519 verification")
+		}
 	}
 	_, _, err = d.keeper.VerifyCertificateV2(ctx, ctx.BlockHeight(), ctx.ChainID(), &certificate)
 	return err
