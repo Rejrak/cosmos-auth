@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -47,7 +48,6 @@ import (
 
 	"alpha/docs"
 	alphamodulekeeper "alpha/x/alpha/keeper"
-	authzattrsante "alpha/x/authzattrs/ante"
 	authzattrskeeper "alpha/x/authzattrs/keeper"
 )
 
@@ -83,6 +83,7 @@ type App struct {
 	// the list of all modules is available in the app_config
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
+	FeeGrantKeeper        feegrantkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -171,6 +172,7 @@ func New(
 		&app.interfaceRegistry,
 		&app.AuthKeeper,
 		&app.BankKeeper,
+		&app.FeeGrantKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
@@ -193,14 +195,7 @@ func New(
 
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
-	coreAnte := app.AnteHandler()
-	if coreAnte == nil {
-		panic("core ante handler is nil")
-	}
-	authzDecorator := authzattrsante.NewAuthzDecorator(app.AuthzAttrsKeeper)
-	app.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-		return authzDecorator.AnteHandle(ctx, tx, simulate, coreAnte)
-	})
+	app.SetAnteHandler(app.newV2AwareAnteHandler())
 
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {
