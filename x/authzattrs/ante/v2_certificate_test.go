@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"strconv"
 	"testing"
 	"time"
 
@@ -100,6 +101,7 @@ type v2TxFixture struct {
 	ctx         sdk.Context
 	codec       moduletestutil.TestEncodingConfig
 	decorator   ante.V2CertificateDecorator
+	keeper      keeper.Keeper
 	account     *authtypes.BaseAccount
 	body        txtypes.TxBody
 	authInfo    txtypes.AuthInfo
@@ -154,7 +156,7 @@ func fixtureV2(t *testing.T, configuredParams ...authtypes.Params) *v2TxFixture 
 		require.NoError(t, err)
 		certificate.Signatures = append(certificate.Signatures, &v2.IssuerSignatureV2{IssuerId: item.id, Signature: signature})
 	}
-	f := &v2TxFixture{t: t, ctx: ctx, codec: enc, account: account, certificate: certificate,
+	f := &v2TxFixture{t: t, ctx: ctx, codec: enc, keeper: k, account: account, certificate: certificate,
 		decorator: ante.NewV2CertificateDecorator(k, v2Accounts{codec: addrCodec, account: account, params: params}, enc.Codec),
 		msg:       banktypes.MsgSend{FromAddress: v2Subject, ToAddress: v2Receiver, Amount: sdk.NewCoins(sdk.NewInt64Coin("token", 1000))},
 		authInfo:  txtypes.AuthInfo{SignerInfos: []*txtypes.SignerInfo{{Sequence: 3, ModeInfo: &txtypes.ModeInfo{Sum: &txtypes.ModeInfo_Single_{Single: &txtypes.ModeInfo_Single{Mode: signing.SignMode_SIGN_MODE_DIRECT}}}}}, Fee: &txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("stake", 100)), GasLimit: 200000}},
@@ -224,6 +226,66 @@ func TestV2TransactionGoldenAndSequenceSource(t *testing.T) {
 	before := proto.Clone(f.certificate)
 	require.NoError(t, f.run(tx))
 	require.True(t, proto.Equal(before, f.certificate))
+}
+
+func TestV2DecisionEvent(t *testing.T) {
+	for _, height := range []int64{100, 105, 110} {
+		f := fixtureV2(t)
+		f.ctx = f.ctx.WithBlockHeight(height).WithEventManager(sdk.NewEventManager())
+		tx := f.build()
+		nextCalled := false
+		_, err := f.decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+			nextCalled = true
+			return ctx, nil
+		})
+		require.NoError(t, err)
+		require.True(t, nextCalled)
+		events := f.ctx.EventManager().Events()
+		require.Len(t, events, 1)
+		require.Equal(t, "authz_v2_decision", events[0].Type)
+		require.Len(t, events[0].Attributes, 11)
+		attributes := make(map[string]string, len(events[0].Attributes))
+		for _, attribute := range events[0].Attributes {
+			attributes[attribute.Key] = attribute.Value
+		}
+		require.Equal(t, map[string]string{
+			"subject": v2Subject, "msg_type": types.MsgSendTypeURL,
+			"policy_id": "policy-bank-send", "policy_version": "2", "issuer_set_id": "9",
+			"certificate_digest": "23d2bdf82cc29dafa3ff0ff8a42e74dc1b88864632a69cca8f9d7055387e844b",
+			"quorum_weight":      "5", "signature_count": "2", "outcome": "ALLOW",
+			"reason_code": types.ReasonOK, "height": strconv.FormatInt(height, 10),
+		}, attributes)
+	}
+}
+
+func TestV2FailureEmitsNoSuccessEvent(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		change func(*v2TxFixture)
+		want   error
+	}{
+		{"tampered signature", func(f *v2TxFixture) { f.certificate.Signatures[0].Signature[0] ^= 1 }, v2.ErrBadSignatureV2},
+		{"expired", func(f *v2TxFixture) { f.ctx = f.ctx.WithBlockHeight(111) }, v2.ErrExpiredV2},
+		{"rotated issuer set", func(f *v2TxFixture) {
+			require.NoError(f.t, f.keeper.SetIssuerSet(f.ctx, types.IssuerSet{IssuerSetId: 10, Active: true, PolicyId: "policy-bank-send", MsgTypeUrl: types.MsgSendTypeURL, ThresholdWeight: 5}))
+			require.NoError(f.t, f.keeper.SetCurrentIssuerSet(f.ctx, "policy-bank-send", types.MsgSendTypeURL, 10))
+		}, v2.ErrStaleIssuerSetV2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := fixtureV2(t)
+			tc.change(f)
+			f.ctx = f.ctx.WithEventManager(sdk.NewEventManager())
+			tx := f.build()
+			nextCalled := false
+			_, err := f.decorator.AnteHandle(f.ctx, tx, false, func(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
+				nextCalled = true
+				return ctx, nil
+			})
+			require.ErrorIs(t, err, tc.want)
+			require.False(t, nextCalled) // IncrementSequence follows this decorator.
+			require.Empty(t, f.ctx.EventManager().Events())
+		})
+	}
 }
 
 func TestV2TransactionIntentAndShapeFailures(t *testing.T) {

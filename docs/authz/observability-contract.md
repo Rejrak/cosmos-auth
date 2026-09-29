@@ -57,6 +57,31 @@ I reason code batch hanno semantica stabile:
 - `AUTHZ_BATCH_STALE_ISSUER_SET`: `sign_doc.issuer_set_id` non è l'issuer set
   corrente selezionato dalla governance per `(policy_id, msg_type_url)`.
 
+Per il percorso V2 transaction-bound, gli errori deterministici conservano le
+seguenti stringhe stabili (nessun fallback a V1 dopo la presentazione V2):
+
+```text
+AUTHZ_V2_INVALID_CERTIFICATE
+AUTHZ_V2_BAD_DOMAIN
+AUTHZ_V2_CHAIN_ID_MISMATCH
+AUTHZ_V2_NOT_YET_VALID
+AUTHZ_V2_EXPIRED
+AUTHZ_V2_STALE_ISSUER_SET
+AUTHZ_V2_UNKNOWN_ISSUER
+AUTHZ_V2_ISSUER_INACTIVE
+AUTHZ_V2_ISSUER_OUT_OF_SCOPE
+AUTHZ_V2_BAD_SIGNATURE
+AUTHZ_V2_DUPLICATE_SIGNATURE
+AUTHZ_V2_QUORUM_NOT_MET
+AUTHZ_V2_MALFORMED_EXTENSION
+AUTHZ_V2_UNSUPPORTED_TX
+AUTHZ_V2_INTENT_MISMATCH
+AUTHZ_V2_INVALID_RAW_TX
+```
+
+Questi reason code identificano il controllo fallito; nessun evento di successo
+V2 viene emesso quando la verifica V2 fallisce.
+
 ## Chain events
 
 Per tx utente:
@@ -87,6 +112,33 @@ quorum_weight
 submitter
 height
 ```
+
+Per una certificate V2 verificata con successo, prima dell'incremento della
+sequence nella stessa Ante chain:
+
+```text
+event: authz_v2_decision
+subject
+msg_type
+policy_id
+policy_version
+issuer_set_id
+certificate_digest
+quorum_weight
+signature_count
+outcome=ALLOW
+reason_code=AUTHZ_OK
+height
+```
+
+`certificate_digest` è SHA-256 dei canonical sign bytes V2 in esadecimale
+minuscolo; `policy_version`, `issuer_set_id`, `quorum_weight`, `signature_count`
+e `height` sono interi decimali. L'evento usa il digest e il peso restituiti
+dall'unica verifica issuer/quorum, senza ricontrollare firme. Non contiene firme,
+chiavi, attributi di policy, segreti o sign bytes. Se una transazione fallisce
+in Ante, l'evento di successo non può restare committed: il normale cache
+context Cosmos scarta anche gli eventi tentativi. Questo schema è un confine
+stabile per una futura UI; implementare la UI resta fuori scope.
 
 Non emettere attributi enterprise sensibili o secret.
 

@@ -1,6 +1,6 @@
 # Transaction-bound authorization certificate protocol V2
 
-Status: **Proposed / Draft** (ADR-0004). Not active; `docs/authz/CONTRACT_VERSION` stays `authz-protocol-v1.2.1`. No V1 code, record, batch or on-chain mutation rule is changed by this draft.
+Status: **Implemented / local live-E2E validated** (ADR-0004) on `service-manager`. `docs/authz/CONTRACT_VERSION` is `authz-protocol-v2.0.0`; production network activation remains separate. V1 code, record, batch and on-chain mutation rules remain unchanged.
 
 ## 1. Scope and authority
 
@@ -12,7 +12,7 @@ V2 applies only to this exact shape. It grants no authority to `MsgMultiSend`, `
 
 Package: `alpha.authzattrs.v2`; protobuf full name `alpha.authzattrs.v2.AuthorizationCertificateV2`; exact `Any.type_url`: `/alpha.authzattrs.v2.AuthorizationCertificateV2`. It is carried **once** in SDK `TxBody.extension_options` (critical, field 1023), not in `non_critical_extension_options` (field 2047), a second Msg, memo, JSON, or transaction hash. No other critical option is accepted in V2. The sole V2 critical `Any.value` is at most 4096 bytes; the total encoded transaction remains subject to SDK/consensus limits.
 
-SDK v0.53.3's `DefaultTxDecoder` checks unknown `TxRaw` and `AuthInfo` fields strictly, but allows bit-11 non-critical unknown fields in `TxBody`. It unpacks both extension-option lists through `TxExtensionOptionI`. The V2 generated protobuf type must be in the app interface registry for that interface and available to `Any` unpacking. In SDK `x/auth/ante`, `RejectExtensionOptionsDecorator` rejects **all** critical options unless given an `ExtensionOptionChecker`. Alpha's current `x/auth/tx/config` depinject handler has no checker, and `ante.NewAnteHandler` has no hook for inserting V2 inside its chain. V2 activation must build one SDK-equivalent `sdk.ChainAnteDecorators` chain, preserving the SDK decorators/options and supplying a checker that accepts **only** this exact type URL. A type-URL checker alone does not establish cardinality or validity. The V2 verifier must decode the actual payload, strictly reject unknown protobuf fields in its nested messages, and compare a reconstructed intent with the final transaction. It must also strictly check raw `TxBody` bytes from `sdk.Context.TxBytes()` for unknown fields rather than relying on the default decoder's non-critical allowance. An alternate type-URL prefix that happens to unpack to the same Go type is not accepted.
+SDK v0.53.3's `DefaultTxDecoder` checks unknown `TxRaw` and `AuthInfo` fields strictly, but allows bit-11 non-critical unknown fields in `TxBody`. It unpacks both extension-option lists through `TxExtensionOptionI`. The V2 generated protobuf type is in the app interface registry for that interface and available to `Any` unpacking. In SDK `x/auth/ante`, `RejectExtensionOptionsDecorator` rejects **all** critical options unless given an `ExtensionOptionChecker`. The default `x/auth/tx/config` depinject handler has no checker, and `ante.NewAnteHandler` has no hook for inserting V2 inside its chain. Alpha builds one SDK-equivalent `sdk.ChainAnteDecorators` chain, preserving the SDK decorators/options and supplying a checker that accepts **only** this exact type URL. A type-URL checker alone does not establish cardinality or validity. The V2 verifier decodes the actual payload, strictly rejects unknown protobuf fields in its nested messages, and compares a reconstructed intent with the final transaction. It also strictly checks raw `TxBody` bytes from `sdk.Context.TxBytes()` for unknown fields rather than relying on the default decoder's non-critical allowance. An alternate type-URL prefix that happens to unpack to the same Go type is not accepted.
 
 | Case on a direct MsgSend | V2 result |
 | --- | --- |
@@ -22,7 +22,7 @@ SDK v0.53.3's `DefaultTxDecoder` checks unknown `TxRaw` and `AuthInfo` fields st
 | Certificate placed in non-critical options | Reject; it cannot select V2 or fall through to V1 |
 | Any unrelated non-critical extension or unknown non-critical `TxBody` field **on a V2 transaction** | Reject; V2 has no unbound extension semantics. A no-certificate V1 transaction retains its existing behavior |
 
-## 3. Logical protobuf schema (field numbers frozen for this draft)
+## 3. Logical protobuf schema (field numbers frozen for V2.0.0)
 
 ```proto
 syntax = "proto3";
@@ -174,8 +174,8 @@ Each signature below is raw Ed25519 over those exact `sign_bytes`, **not** their
 | `issuer-alpha` | `03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8` | `b1bea693676fc45cbc80c3cf2127166238d3289466166ab3630a684e6f7bb1d800601459bb212a98d2d0b8c1f5a96e359744b1e1ce8a0430298d61dd334d6b0d` |
 | `issuer-beta` | `29acbae141bccaf0b22e1a94d34d0bc7361e526d0bfe12c89794bc9322966dd7` | `02d446a06af1329d2dba3e752a6f0689d9625c8e46a6f55b2ee4809becf1c1e133d6ad7b0196f9b15df653c97679a81250912525f88df0c39a99b4fa3efc4008` |
 
-The logical `AuthorizationCertificateV2` envelope is `sign_doc` with the fixture fields above, followed by `signatures = [{issuer-alpha, signature-alpha}, {issuer-beta, signature-beta}]` in issuer-ID order. Its wire bytes are **not** the issuer sign bytes. The fixture was generated with protobuf wire encoding and checked against Go standard-library Ed25519 verification; independent implementations must match the listed sign bytes byte-for-byte before activation.
+The logical `AuthorizationCertificateV2` envelope is `sign_doc` with the fixture fields above, followed by `signatures = [{issuer-alpha, signature-alpha}, {issuer-beta, signature-beta}]` in issuer-ID order. Its wire bytes are **not** the issuer sign bytes. The fixture was generated with protobuf wire encoding and checked against Go standard-library Ed25519 verification; independent implementations must match the listed sign bytes byte-for-byte.
 
 ## 11. Open decisions
 
-None within this draft's deliberately narrow semantics. Activation and cross-repository implementation require their own approval and golden-vector tests; they do not license alternate canonical bytes.
+None within V2.0.0's deliberately narrow semantics. Production rollout and future cross-repository changes require separate approval and golden-vector checks; they do not license alternate canonical bytes.

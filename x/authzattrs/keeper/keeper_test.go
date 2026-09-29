@@ -26,7 +26,7 @@ type fixture struct {
 	addressCodec address.Codec
 }
 
-func initFixture(t *testing.T) *fixture {
+func initFixture(t testing.TB) *fixture {
 	t.Helper()
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModule{})
 	addressCodec := addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())

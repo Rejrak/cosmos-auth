@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/bits"
+	"strconv"
 	"strings"
 
 	"cosmossdk.io/core/address"
@@ -24,6 +25,7 @@ import (
 	"google.golang.org/protobuf/encoding/protowire"
 
 	"alpha/x/authzattrs/keeper"
+	"alpha/x/authzattrs/types"
 	"alpha/x/authzattrs/v2"
 )
 
@@ -232,8 +234,25 @@ func (d V2CertificateDecorator) VerifyV2Transaction(ctx sdk.Context, tx sdk.Tx) 
 			ctx.GasMeter().ConsumeGas(params.SigVerifyCostED25519, "v2 issuer Ed25519 verification")
 		}
 	}
-	_, _, err = d.keeper.VerifyCertificateV2(ctx, ctx.BlockHeight(), ctx.ChainID(), &certificate)
-	return err
+	quorumWeight, digest, err := d.keeper.VerifyCertificateV2(ctx, ctx.BlockHeight(), ctx.ChainID(), &certificate)
+	if err != nil {
+		return err
+	}
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		"authz_v2_decision",
+		sdk.NewAttribute("subject", intent.Subject),
+		sdk.NewAttribute("msg_type", types.MsgSendTypeURL),
+		sdk.NewAttribute("policy_id", certificate.SignDoc.PolicyId),
+		sdk.NewAttribute("policy_version", strconv.FormatUint(certificate.SignDoc.PolicyVersion, 10)),
+		sdk.NewAttribute("issuer_set_id", strconv.FormatUint(certificate.SignDoc.IssuerSetId, 10)),
+		sdk.NewAttribute("certificate_digest", fmt.Sprintf("%x", digest)),
+		sdk.NewAttribute("quorum_weight", strconv.FormatUint(quorumWeight, 10)),
+		sdk.NewAttribute("signature_count", strconv.Itoa(len(certificate.Signatures))),
+		sdk.NewAttribute("outcome", "ALLOW"),
+		sdk.NewAttribute("reason_code", types.ReasonOK),
+		sdk.NewAttribute("height", strconv.FormatInt(ctx.BlockHeight(), 10)),
+	))
+	return nil
 }
 
 // SDK's Coin.Unmarshal parses amount into math.Int, losing lexical details

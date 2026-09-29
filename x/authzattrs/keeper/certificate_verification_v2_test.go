@@ -14,14 +14,14 @@ import (
 
 const v2GoldenDigest = "23d2bdf82cc29dafa3ff0ff8a42e74dc1b88864632a69cca8f9d7055387e844b"
 
-func v2Hex(t *testing.T, value string) []byte {
+func v2Hex(t testing.TB, value string) []byte {
 	t.Helper()
 	bz, err := hex.DecodeString(value)
 	require.NoError(t, err)
 	return bz
 }
 
-func v2GoldenCertificate(t *testing.T) (*v2.AuthorizationCertificateV2, []types.Issuer) {
+func v2GoldenCertificate(t testing.TB) (*v2.AuthorizationCertificateV2, []types.Issuer) {
 	t.Helper()
 	certificate := &v2.AuthorizationCertificateV2{
 		SignDoc: &v2.AuthorizationCertificateSignDocV2{
