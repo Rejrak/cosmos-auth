@@ -2,6 +2,7 @@ package app
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -136,5 +137,71 @@ func TestV2NegativeTransactionPaths(t *testing.T) {
 		f.installV1Grant()
 		_, freshRaw := f.signedTx(f.certificate, 1, nil) // Fresh wallet signature; issuer-signed intent still binds sequence 0.
 		requireRejectedV2Ante(t, f, freshRaw, v2.ErrIntentMismatchV2)
+	})
+}
+
+func TestV2IssuerTrustNegativePaths(t *testing.T) {
+	t.Run("INVALID_ISSUER_SIGNATURE", func(t *testing.T) {
+		f := newV2AppAnteFixture(t)
+		f.fundNegativePathSender()
+		certificate := f.newCertificate(0)
+		certificate.Signatures[0].Signature[0] ^= 1 // Known issuer, raw 64-byte signature, invalid cryptography only.
+		require.Len(t, certificate.Signatures[0].Signature, ed25519.SignatureSize)
+		_, raw := f.signedTx(certificate, 0, nil)
+		requireRejectedV2Ante(t, f, raw, v2.ErrBadSignatureV2)
+	})
+
+	t.Run("INSUFFICIENT_QUORUM", func(t *testing.T) {
+		f := newV2AppAnteFixture(t)
+		f.fundNegativePathSender()
+		certificate := f.newCertificate(0)
+		certificate.Signatures = certificate.Signatures[:1] // issuer-alpha weight 2; threshold 5.
+		signBytes, _, err := v2.CanonicalCertificateSignBytesV2(certificate.SignDoc, f.app.AuthKeeper.AddressCodec())
+		require.NoError(t, err)
+		require.True(t, ed25519.Verify(f.issuerKeys[0].Public().(ed25519.PublicKey), signBytes, certificate.Signatures[0].Signature))
+		_, raw := f.signedTx(certificate, 0, nil)
+		requireRejectedV2Ante(t, f, raw, v2.ErrQuorumNotMetV2)
+	})
+
+	t.Run("UNKNOWN_ISSUER", func(t *testing.T) {
+		f := newV2AppAnteFixture(t)
+		f.fundNegativePathSender()
+		certificate := f.newCertificate(0)
+		seed := sha256.Sum256([]byte("v2 unknown issuer test fixture only"))
+		unknownKey := ed25519.NewKeyFromSeed(seed[:]) // TEST-ONLY deterministic key.
+		signBytes, _, err := v2.CanonicalCertificateSignBytesV2(certificate.SignDoc, f.app.AuthKeeper.AddressCodec())
+		require.NoError(t, err)
+		certificate.Signatures[1].IssuerId = "issuer-unknown"
+		certificate.Signatures[1].Signature = ed25519.Sign(unknownKey, signBytes)
+		require.True(t, ed25519.Verify(unknownKey.Public().(ed25519.PublicKey), signBytes, certificate.Signatures[1].Signature))
+		_, raw := f.signedTx(certificate, 0, nil)
+		requireRejectedV2Ante(t, f, raw, v2.ErrUnknownIssuerV2)
+	})
+
+	t.Run("POLICY_METADATA_MISMATCH", func(t *testing.T) {
+		f := newV2AppAnteFixture(t)
+		f.fundNegativePathSender()
+		certificate := f.newCertificate(0)
+		certificate.SignDoc.PolicyId = "policy-other" // No CurrentIssuerSet for this signed policy.
+		signBytes, _, err := v2.CanonicalCertificateSignBytesV2(certificate.SignDoc, f.app.AuthKeeper.AddressCodec())
+		require.NoError(t, err)
+		for i, signature := range certificate.Signatures {
+			signature.Signature = ed25519.Sign(f.issuerKeys[i], signBytes)
+			require.True(t, ed25519.Verify(f.issuerKeys[i].Public().(ed25519.PublicKey), signBytes, signature.Signature))
+		}
+		_, raw := f.signedTx(certificate, 0, nil)
+		requireRejectedV2Ante(t, f, raw, v2.ErrStaleIssuerSetV2)
+	})
+
+	t.Run("INACTIVE_ISSUER", func(t *testing.T) {
+		f := newV2AppAnteFixture(t)
+		f.fundNegativePathSender()
+		issuer, found, err := f.app.AuthzAttrsKeeper.GetIssuer(f.ctx, 9, "issuer-beta")
+		require.NoError(t, err)
+		require.True(t, found)
+		issuer.Active = false
+		require.NoError(t, f.app.AuthzAttrsKeeper.SetIssuer(f.ctx, issuer))
+		_, raw := f.signedTx(f.newCertificate(0), 0, nil)
+		requireRejectedV2Ante(t, f, raw, v2.ErrIssuerInactiveV2)
 	})
 }
